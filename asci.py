@@ -30,23 +30,33 @@ tdets = 500
 #############
 # INITIALIZE
 #############
-C_old = np.zero(sp.special.binom(mol.nbas,mol.nelectron))
-C_old[0] = 1
-s = mol.intor('cint1e_nuc_sph')
 size_basis = len(s[0])
 C_new = np.zero(sp.special.binom(size_basis,mol.nelectron))
+C_old = np.zero(sp.special.binom(size_basis,mol.nelectron))
+C_old[0] = 1
+C_new = np.zero(sp.special.binom(size_basis,mol.nelectron))
+
 myhf = scf.RHF(mol)
 E = myhf.kernel()
+
 core = np.argsort(C_old)
 detlist = np.array(list(itertools.combinations(np.arange(size_basis),mol.nelectron)))
+
+H = np.zeros((len(C_old),len(C_old)))
 
 #############
 # LOOP
 #############
 
+for i in range(len(H)):
+    H[i,i] = 
+    
 for i in core:
-    for j in range(mol.nelectron):
-        for k in range(mol.nelectron):
+    occ = det[i]
+    virt = np.set1d(np.arange(size_basis),occ)
+    for p in range(mol.nelectron):
+        for r in range(mol.nelectron):
+            
 
 
 enuc = mol.energy_nuc()
