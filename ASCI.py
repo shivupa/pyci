@@ -47,8 +47,7 @@ detlist = np.array(list(itertools.combinations(np.arange(size_basis),mol.nelectr
 for i in core:
     for j in range(mol.nelectron):
         for k in range(mol.nelectron):
-
-
+            
 enuc = mol.energy_nuc()
 hcore = mol.intor('cint1e_nuc_sph') + mol.intor('cint1e_kin_sph')
 ovlp = mol.intor('cint1e_ovlp_sph')
