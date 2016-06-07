@@ -19,13 +19,13 @@ mol = gto.M(
     verbose = 1,
     unit='b'
 )
+
 #############
 # INPUT
 #############
 cdets = 250
 tdets = 500
 #############
-
 
 #############
 # INITIALIZE
@@ -38,7 +38,6 @@ C_new = np.zero(sp.special.binom(size_basis,mol.nelectron))
 myhf = scf.RHF(mol)
 E = myhf.kernel()
 core = np.argsort(C_old)
-
 detlist = np.array(list(itertools.combinations(np.arange(size_basis),mol.nelectron)))
 
 #############
