@@ -9,10 +9,6 @@ from pyscf import gto, scf, ao2mo, fci
 Energy curve by FCI
 '''
 
-
-
-
-
 #############
 # INPUT
 #############
