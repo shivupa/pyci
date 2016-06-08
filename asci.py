@@ -2,15 +2,20 @@ import scipy as sp
 import scipy as sp
 import scipy.linalg as spla
 import numpy as np
-
+from functools import reduce
+import pyscf
+from pyscf import gto, scf, ao2mo, fci
 '''
 Energy curve by FCI
 '''
 
-from functools import reduce
-import numpy
-from pyscf import gto, scf, ao2mo, fci
 
+
+
+
+#############
+# INPUT
+#############
 mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
             ['H', (1.638036840407,   1.136548822547,  -0.000000000000)],
@@ -19,10 +24,6 @@ mol = gto.M(
     verbose = 1,
     unit='b'
 )
-
-#############
-# INPUT
-#############
 cdets = 250
 tdets = 500
 #############
@@ -47,16 +48,40 @@ H = np.zeros((len(C_old),len(C_old)))
 #############
 # LOOP
 #############
+# get fock matrix
+h1e = mf.get_hcore(mol)
+s1e = mf.get_ovlp(mol)
+ijkl = ao2mo.incore.full(pyscf.scf._vhf.int2e_sph(mol._atm, mol._bas, mol._env), myhf.mo_coeff, compact=False)
+# eq 5
+for i in len(H):
+    occ = det[i]
+    virt = np.set1d(np.arange(size_basis),occ)
+    for p in occ:
+        H[i,i] += h1e[p,p]
+        for q in occ:
+            if p != q:
+                if(i>j)
+                    ij = i*(i+1)/2 + j;
+                else
+                    ij = j*(j+1)/2 + i;
+                h+=0.5*(ijkl[ij,ij]
 
-for i in range(len(H)):
-    H[i,i] = 
-    
 for i in core:
     occ = det[i]
     virt = np.set1d(np.arange(size_basis),occ)
-    for p in range(mol.nelectron):
-        for r in range(mol.nelectron):
-            
+    for p in occ:
+        H[i,i] =
+        for r in occ:
+
+
+
+for i in core:
+    occ = det[i]
+    virt = np.set1d(np.arange(size_basis),occ)
+    for p in occ:
+        for r in virt:
+
+
 
 
 enuc = mol.energy_nuc()
