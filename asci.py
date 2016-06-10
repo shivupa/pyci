@@ -1,5 +1,4 @@
 import scipy as sp
-import scipy as sp
 import scipy.linalg as spla
 import numpy as np
 from functools import reduce
@@ -7,9 +6,7 @@ import pyscf
 import itertools
 import h5py
 from pyscf import gto, scf, ao2mo, fci
-'''
-Energy curve by FCI
-'''
+import pyscf.tools as pt
 #############
 # INPUT
 #############
@@ -23,6 +20,13 @@ mol = gto.M(
 )
 cdets = 250
 tdets = 500
+
+myhf = scf.RHF(mol)
+E = myhf.kernel()
+c = myhf.mo_coeff
+h1e = reduce(np.dot, (c.T, myhf.get_hcore(), c))
+eri = ao2mo.kernel(mol, c)
+pt.fcidump.from_integrals('fcidump.example1', h1e, eri, c.shape[1],mol.nelectron, ms=0)
 #############
 
 #############
@@ -36,9 +40,6 @@ C_old = np.zeros(sp.special.binom(size_basis,mol.nelectron))
 C_old[0] = 1
 C_new = np.zeros(sp.special.binom(size_basis,mol.nelectron))
 
-myhf = scf.RHF(mol)
-E = myhf.kernel()
-
 core = np.argsort(C_old)
 detlist = np.array(list(itertools.combinations(np.arange(size_basis),mol.nelectron)))
 
@@ -49,8 +50,7 @@ print "A",np.size(H)
 # LOOP
 #############
 # get fock matrix
-h1e = myhf.get_hcore(mol)
-s1e = myhf.get_ovlp(mol)
+
 ijkl = ao2mo.incore.full(pyscf.scf._vhf.int2e_sph(mol._atm, mol._bas, mol._env), myhf.mo_coeff, compact=False)
 mocc = myhf.mo_coeff[:,myhf.mo_occ>0]
 mvir = myhf.mo_coeff[:,myhf.mo_occ==0]
@@ -66,7 +66,7 @@ for i in range(len(H)):
         H[i,i] += h1e[p,p]
         for q in occ:
             if p != q:
-                
+
                 print H[i,i]
 
 
