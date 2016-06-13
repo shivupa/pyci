@@ -31,6 +31,9 @@ eri = ao2mo.kernel(mol, c)
 
 tools.fcidump.from_integrals('fcidump.example1', h1e, eri, c.shape[1],
                              mol.nelectron, ms=0)
+print "shit",h1e
+print "shit", eri
+print "shit", c.shape[1]
 
 #
 # Bypass small matrix elements in FCIDUMP
