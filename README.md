@@ -1,2 +1,3 @@
 # pyci
-A Python Configuration Interaction program.
+A Python Configuration Interaction program...
+which doesn't work.
