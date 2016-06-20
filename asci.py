@@ -7,6 +7,7 @@ import itertools
 import h5py
 from pyscf import gto, scf, ao2mo, fci
 import pyscf.tools as pt
+import copy
 #############
 # INPUT
 #############
@@ -32,6 +33,9 @@ def create_PYSCF_fcidump():
     pt.fcidump.from_integrals('fcidump.txt', h1e, eri, c.shape[1],mol.nelectron, ms=0)
     cisolver = fci.FCI(mol, myhf.mo_coeff)
     print('E(HF) = %.12f, E(FCI) = %.12f' % (E,(cisolver.kernel()[0] + mol.energy_nuc())))
+def amplitude(det,excitation):
+
+    return 0.1
 #############
 # INITIALIZE
 #############
@@ -40,21 +44,28 @@ E = myhf.kernel()
 c = myhf.mo_coeff
 h1e = reduce(np.dot, (c.T, myhf.get_hcore(), c))
 eri = ao2mo.kernel(mol, c)
-print h1e
-print eri
-print np.shape(h1e),np.shape(eri)
-print mol.nelectron, np.shape(h1e)[0]*2
+#print h1e
+#print eri
+#print np.shape(h1e),np.shape(eri)
+#print mol.nelectron, np.shape(h1e)[0]*2
 num_occ = mol.nelectron
 num_virt = ((np.shape(h1e)[0]*2)-mol.nelectron)
 bitstring = "1"*num_occ
 bitstring += "0"*num_virt
 print bitstring
-starting_amplitude =0.1
-detdict = {bitstring:starting_amplitude}
-print detdict
-# a^dagger_i a_j |psi>
+starting_amplitude =1.0
+original_detdict = {bitstring:starting_amplitude}
 
-for det in detdict:
+H_core = np.array((cdets,cdets))
+H_target = np.array((tdets,tdets))
+#############
+# MAIN LOOP
+#############
+# a^dagger_i a_j |psi>
+temp_detdict = copy.deepcopy(original_detdict)
+temp_double_detdict = copy.deepcopy(original_detdict)
+print temp_detdict
+for det in original_detdict:
     occ_index = []
     virt_index = []
     count = 0
@@ -71,4 +82,25 @@ for det in detdict:
             temp_det = list(det)
             temp_det[i] = "0"
             temp_det[j] = "1"
-            print ''.join(temp_det)
+            temp_det =  ''.join(temp_det)
+            temp_detdict[temp_det] = amplitude(det,temp_det)
+            #print temp_det, temp_amplitude
+            for k in occ_index:
+                for l in virt_index:
+                    if k>i and l>j:
+                        temp_double_det = list(det)
+                        temp_double_det[i] = "0"
+                        temp_double_det[j] = "1"
+                        temp_double_det[k] = "0"
+                        temp_double_det[l] = "1"
+                        temp_double_det =  ''.join(temp_det)
+                        temp_double_detdict[temp_double_det] = amplitude(det,temp_double_det)
+
+detdict = {}
+detdict.update(original_detdict)
+detdict.update(temp_detdict)
+detdict.update(temp_double_detdict)
+for i in detdict:
+    print i, detdict[i]
+print sorted(detdict.items(), key=lambda x: x[1])
+print len(detdict)
