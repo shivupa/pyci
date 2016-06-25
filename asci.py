@@ -66,7 +66,28 @@ for occlist in itertools.combinations(range(num_orbs),num_occ):
     for orb in occlist:
         idet[orb]="1"
     fulldetlist.append(''.join(idet))
+ndets=sp.special.binom(num_orbs,num_occ)
+#a,b,c lists for csr sparse hamiltonian
+#row,col,value?
+a=[]
+b=[]
+c=[]
+for i in range(ndets):
+    hii=1.0 #placeholder: generate hii here
+    a.append(i)
+    b.append(i)
+    c.append(hii)
+    for j in range(i+1,ndets):
+        hij=1.0 #placeholder: generate hij here
+        a.append(i)
+        a.append(j)
+        b.append(j)
+        b.append(i)
+        c.append(hij)
+        c.append(hij)
+fullham=sp.sparse.csr_matrix((c,(a,b)),shape=(ndets,ndets))
 print(len(fulldetlist))
+
 
 #############
 # MAIN LOOP
