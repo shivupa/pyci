@@ -51,7 +51,7 @@ num_occ = mol.nelectron
 num_virt = ((np.shape(h1e)[0]*2)-mol.nelectron)
 bitstring = "1"*num_occ
 bitstring += "0"*num_virt
-print bitstring
+print(bitstring)
 starting_amplitude =1.0
 original_detdict = {bitstring:starting_amplitude}
 
@@ -61,8 +61,8 @@ H_target = np.array((tdets,tdets))
 # MAIN LOOP
 #############
 # a^dagger_i a_j |psi>
-temp_detdict = copy.deepcopy(original_detdict)
-temp_double_detdict = copy.deepcopy(original_detdict)
+temp_detdict = {}
+temp_double_detdict = {}
 new_detdict = copy.deepcopy(original_detdict)
 print(temp_detdict)
 
@@ -88,7 +88,7 @@ for det in original_detdict:
             #print temp_det, temp_amplitude
             for k in occ_index:
                 for l in virt_index:
-                    if k!=i and l!=j:
+                    if k>i and l>j:
                         temp_double_det = list(det)
                         temp_double_det[i] = "0"
                         temp_double_det[j] = "1"
@@ -102,7 +102,6 @@ for i in temp_detdict:
     except:
         new_detdict.update({i:temp_detdict[i]})
 for i in temp_double_detdict:
-    print i
     try:
         new_detdict[i] += temp_double_detdict[i]
     except:
