@@ -61,8 +61,8 @@ H_target = np.array((tdets,tdets))
 # MAIN LOOP
 #############
 # a^dagger_i a_j |psi>
-temp_detdict = copy.deepcopy(original_detdict)
-temp_double_detdict = copy.deepcopy(original_detdict)
+temp_detdict = {}
+temp_double_detdict = {}
 new_detdict = copy.deepcopy(original_detdict)
 print(temp_detdict)
 
@@ -88,7 +88,7 @@ for det in original_detdict:
             #print temp_det, temp_amplitude
             for k in occ_index:
                 for l in virt_index:
-                    if k!=i and l!=j:
+                    if k>i and l>j:
                         temp_double_det = list(det)
                         temp_double_det[i] = "0"
                         temp_double_det[j] = "1"
