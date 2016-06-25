@@ -51,7 +51,7 @@ num_occ = mol.nelectron
 num_virt = ((np.shape(h1e)[0]*2)-mol.nelectron)
 bitstring = "1"*num_occ
 bitstring += "0"*num_virt
-print bitstring
+print(bitstring)
 starting_amplitude =1.0
 original_detdict = {bitstring:starting_amplitude}
 
@@ -102,7 +102,7 @@ for i in temp_detdict:
     except:
         new_detdict.update({i:temp_detdict[i]})
 for i in temp_double_detdict:
-    print i
+    print(i)
     try:
         new_detdict[i] += temp_double_detdict[i]
     except:
