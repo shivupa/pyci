@@ -102,7 +102,6 @@ for i in temp_detdict:
     except:
         new_detdict.update({i:temp_detdict[i]})
 for i in temp_double_detdict:
-    print(i)
     try:
         new_detdict[i] += temp_double_detdict[i]
     except:
