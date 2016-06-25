@@ -47,6 +47,7 @@ eri = ao2mo.kernel(mol, c)
 #print eri
 #print np.shape(h1e),np.shape(eri)
 #print mol.nelectron, np.shape(h1e)[0]*2
+num_orbs=2*len(h1e)
 num_occ = mol.nelectron
 num_virt = ((np.shape(h1e)[0]*2)-mol.nelectron)
 bitstring = "1"*num_occ
@@ -57,6 +58,16 @@ original_detdict = {bitstring:starting_amplitude}
 
 H_core = np.array((cdets,cdets))
 H_target = np.array((tdets,tdets))
+#generate all determinants
+fulldetlist=[]
+print(num_orbs)
+for occlist in itertools.combinations(range(num_orbs),num_occ):
+    idet=["0" for i in range(num_orbs)]
+    for orb in occlist:
+        idet[orb]="1"
+    fulldetlist.append(''.join(idet))
+print(len(fulldetlist))
+
 #############
 # MAIN LOOP
 #############
