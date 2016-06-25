@@ -34,7 +34,6 @@ def create_PYSCF_fcidump():
     cisolver = fci.FCI(mol, myhf.mo_coeff)
     print('E(HF) = %.12f, E(FCI) = %.12f' % (E,(cisolver.kernel()[0] + mol.energy_nuc())))
 def amplitude(det,excitation):
-
     return 0.1
 #############
 # INITIALIZE
@@ -64,7 +63,9 @@ H_target = np.array((tdets,tdets))
 # a^dagger_i a_j |psi>
 temp_detdict = copy.deepcopy(original_detdict)
 temp_double_detdict = copy.deepcopy(original_detdict)
-print temp_detdict
+new_detdict = copy.deepcopy(original_detdict)
+print(temp_detdict)
+
 for det in original_detdict:
     occ_index = []
     virt_index = []
@@ -75,32 +76,43 @@ for det in original_detdict:
         else:
             virt_index.append(count)
         count +=1
-    print occ_index
-    print virt_index
+    print(occ_index)
+    print(virt_index)
     for i in occ_index:
         for j in virt_index:
             temp_det = list(det)
             temp_det[i] = "0"
             temp_det[j] = "1"
             temp_det =  ''.join(temp_det)
-            temp_detdict[temp_det] = amplitude(det,temp_det)
+            temp_detdict[temp_det] = 0.1
             #print temp_det, temp_amplitude
             for k in occ_index:
                 for l in virt_index:
-                    if k>i and l>j:
+                    if k!=i and l!=j:
                         temp_double_det = list(det)
                         temp_double_det[i] = "0"
                         temp_double_det[j] = "1"
                         temp_double_det[k] = "0"
                         temp_double_det[l] = "1"
                         temp_double_det =  ''.join(temp_det)
-                        temp_double_detdict[temp_double_det] = amplitude(det,temp_double_det)
-
-detdict = {}
-detdict.update(original_detdict)
-detdict.update(temp_detdict)
-detdict.update(temp_double_detdict)
-for i in detdict:
-    print i, detdict[i]
-print sorted(detdict.items(), key=lambda x: x[1])
-print len(detdict)
+                        temp_double_detdict[temp_double_det] = 0.3
+for i in temp_detdict:
+    try:
+        new_detdict[i] += temp_detdict[i]
+    except:
+        new_detdict.update({i:temp_detdict[i]})
+for i in temp_double_detdict:
+    print i
+    try:
+        new_detdict[i] += temp_double_detdict[i]
+    except:
+        new_detdict.update({i:temp_double_detdict[i]})
+#new_detdict.update(temp_double_detdict)
+#detdict = {}
+#new_detdict.update(original_detdict)
+#print("shiv",len(temp_detdict))
+#print("shiv",len(temp_double_detdict))
+for i in new_detdict:
+    print(i, new_detdict[i])
+print(sorted(new_detdict.items(), key=lambda x: x[1]))
+print(len(new_detdict))
