@@ -94,7 +94,7 @@ for det in original_detdict:
                         temp_double_det[j] = "1"
                         temp_double_det[k] = "0"
                         temp_double_det[l] = "1"
-                        temp_double_det =  ''.join(temp_det)
+                        temp_double_det =  ''.join(temp_double_det)
                         temp_double_detdict[temp_double_det] = 0.3
 for i in temp_detdict:
     try:
