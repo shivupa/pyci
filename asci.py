@@ -11,6 +11,17 @@ import copy
 #############
 # INPUT
 #############
+#2-index transformation for accessing eri elements with standard 4 indices
+__idx2_cache = {}
+def idx2(i,j):
+    if (i,j) in __idx2_cache:
+        return __idx2_cache[i,j]
+    elif i>j:
+        __idx2_cache[i,j] = i*(i+1)/2+j
+    else:
+        __idx2_cache[i,j] = j*(j+1)/2+i
+    return __idx2_cache[i,j]
+
 mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
             ['H', (1.638036840407,   1.136548822547,  -0.000000000000)],
@@ -21,6 +32,7 @@ mol = gto.M(
 )
 cdets = 25
 tdets = 50
+nao=mol.nao_nr()
 #############
 # FUNCTIONS
 #############
@@ -43,6 +55,15 @@ E = myhf.kernel()
 c = myhf.mo_coeff
 h1e = reduce(np.dot, (c.T, myhf.get_hcore(), c))
 eri = ao2mo.kernel(mol, c)
+#use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
+
+#make full 4-index eris in MO basis (only for testing idx2)
+#eri_mo = ao2mo.restore(1, eri, nao)
+
+#eri in AO basis
+#eri_ao = mol.intor('cint2e_sph')
+#eri_ao = eri_ao.reshape([nao,nao,nao,nao])
+
 #print h1e
 #print eri
 #print np.shape(h1e),np.shape(eri)
@@ -66,26 +87,26 @@ for occlist in itertools.combinations(range(num_orbs),num_occ):
     for orb in occlist:
         idet[orb]="1"
     fulldetlist.append(''.join(idet))
-ndets=sp.special.binom(num_orbs,num_occ)
-#a,b,c lists for csr sparse hamiltonian
-#row,col,value?
-a=[]
-b=[]
-c=[]
+ndets=int(sp.special.binom(num_orbs,num_occ))
+#lists for csr sparse storage of hamiltonian
+hrow=[]
+hcol=[]
+hval=[]
 for i in range(ndets):
-    hii=1.0 #placeholder: generate hii here
-    a.append(i)
-    b.append(i)
-    c.append(hii)
+    hii=0.0 #placeholder: generate hii here
+
+    hrow.append(i)
+    hcol.append(i)
+    hval.append(hii)
     for j in range(i+1,ndets):
         hij=1.0 #placeholder: generate hij here
-        a.append(i)
-        a.append(j)
-        b.append(j)
-        b.append(i)
-        c.append(hij)
-        c.append(hij)
-fullham=sp.sparse.csr_matrix((c,(a,b)),shape=(ndets,ndets))
+        hrow.append(i)
+        hrow.append(j)
+        hcol.append(j)
+        hcol.append(i)
+        hval.append(hij)
+        hval.append(hij)
+fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 print(len(fulldetlist))
 
 
