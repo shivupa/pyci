@@ -22,6 +22,25 @@ def idx2(i,j):
         __idx2_cache[i,j] = j*(j+1)/2+i
     return __idx2_cache[i,j]
 
+#determine degree of excitation between two dets (as strings of {0,1})
+def n_excit(idet,jdet):
+    if idet==jdet:
+        return 0
+    return (bin(int(idet,2)^int(jdet,2)).count('1'))/2
+
+#return alpha/beta elements of det (either as a string or as a list of one-char strings)
+def alpha(det):
+    return det[::2]
+def beta(det):
+    return det[1::2]
+
+def occ_alpha(detstring):
+    alphastring = alpha(detstring)
+    occlist=[]
+    
+
+
+
 mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
             ['H', (1.638036840407,   1.136548822547,  -0.000000000000)],
@@ -33,6 +52,10 @@ mol = gto.M(
 cdets = 25
 tdets = 50
 nao=mol.nao_nr()
+s = mol.intor('cint1e_ovlp_sph')
+t = mol.intor('cint1e_kin_sph')
+v = mol.intor('cint1e_nuc_sph')
+h=t+v
 #############
 # FUNCTIONS
 #############
@@ -68,44 +91,96 @@ eri = ao2mo.kernel(mol, c)
 #print eri
 #print np.shape(h1e),np.shape(eri)
 #print mol.nelectron, np.shape(h1e)[0]*2
-num_orbs=2*len(h1e)
+num_orbs=2*nao
 num_occ = mol.nelectron
-num_virt = ((np.shape(h1e)[0]*2)-mol.nelectron)
-bitstring = "1"*num_occ
-bitstring += "0"*num_virt
-print(bitstring)
-starting_amplitude =1.0
-original_detdict = {bitstring:starting_amplitude}
+num_virt = num_orbs - num_occ
+#bitstring = "1"*num_occ
+#bitstring += "0"*num_virt
+#print(bitstring)
+#starting_amplitude =1.0
+#original_detdict = {bitstring:starting_amplitude}
 
 H_core = np.array((cdets,cdets))
 H_target = np.array((tdets,tdets))
+
 #generate all determinants
-fulldetlist=[]
-print(num_orbs)
+
+
+fulldetlist=[] #mapping from det number to bitstring (consider using int instead of string? or two ints/strings for alpha and beta spin)
+detid={} #mapping from bitstring to det number (not sure whether this will be necessary, but might make things easier for now)
+detcount=0
 for occlist in itertools.combinations(range(num_orbs),num_occ):
     idet=["0" for i in range(num_orbs)]
     for orb in occlist:
         idet[orb]="1"
     fulldetlist.append(''.join(idet))
+    detid[''.join(idet)]=detcount
+    detcount+=1
 ndets=int(sp.special.binom(num_orbs,num_occ))
+#start with HF determinant
+original_detdict = {fulldetlist[0]:1.0}
 #lists for csr sparse storage of hamiltonian
+#if this is just for storage (and not diagonalization) then we can use a dict instead (or store as upper half of sparse matrix)
 hrow=[]
 hcol=[]
 hval=[]
 for i in range(ndets):
     hii=0.0 #placeholder: generate hii here
 
+    idet=fulldetlist[i]
+    ideta=alpha(idet)
+    idetb=beta(idet)
+#might be better to just loop over occupied orbs instead of over all indices
+    for ii, (ia, ib) in enumerate(zip(ideta,idetb)):
+        if "1" in ia+ib:
+            hii+= (int(ia)+int(ib))*h1e[ii,ii]
+            jii=eri[idx2(ii,ii),idx2(ii,ii)]
+            if ia+ib == "11":
+                hii += jii
+            for jj,ja,jb in zip(range(ii+1,nao),ideta[ii+1:],idetb[ii+1:]):
+                jij=eri[idx2(ii,ii),idx2(jj,jj)]
+                kij=eri[idx2(ii,jj),idx2(jj,ii)]
+                if ia+jb=="11":
+                    hii += jij
+                if ib+ja=="11":
+                    hii += jij
+                if ia+ja=="11":
+                    hii += jij
+                    hii -= kij
+                if ib+jb=="11":
+                    hii += jij
+                    hii -= kij
     hrow.append(i)
     hcol.append(i)
     hval.append(hii)
-    for j in range(i+1,ndets):
-        hij=1.0 #placeholder: generate hij here
-        hrow.append(i)
-        hrow.append(j)
-        hcol.append(j)
-        hcol.append(i)
-        hval.append(hij)
-        hval.append(hij)
+#    for j in range(i+1,ndets):
+#
+#        jdet=fulldetlist[j]
+#        nexc_ij = n_excit(idet,jdet)
+#        if nexc_ij <= 2:
+#            jdeta=alpha(jdet)
+#            jdetb=beta(jdet)
+#            hij=0.0 #placeholder: generate hij here
+#            if nexc_ij==2:
+#                (hole1,hole2,part1,part2,sign12)=get_double_exc(idet,jdet)
+#                hij += sign12 * (eri[idx2(part1,hole1),idx2(part2,hole2)] - eri[idx2(part1,hole2),idx2(part2,hole1)])
+#            else:
+#                (hole1,part1,sign1,occsame,occdiff) = get_single_exc(idet,jdet)
+#                samespin = (hole1%2 == part1%2)
+#                if samespin:
+#                    hij += h1e[hole1/2,part1/2]
+#                for ii in occsame:
+#                    hij += eri[idx2(part1
+#
+#
+#
+#                
+#            hrow.append(i)
+#            hrow.append(j)
+#            hcol.append(j)
+#            hcol.append(i)
+#            hval.append(hij)
+#            hval.append(hij)
 fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 print(len(fulldetlist))
 
