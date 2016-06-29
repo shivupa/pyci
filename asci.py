@@ -22,11 +22,40 @@ def idx2(i,j):
         __idx2_cache[i,j] = j*(j+1)/2+i
     return __idx2_cache[i,j]
 
+#not sure whether caching is worthwhile here if this just calls idx2, which is already cached 
+#__idx4_cache = {}
+def idx4(i,j,k,l):
+    """idx4(i,j,k,l) returns 2-tuple corresponding to (ij|kl) in square eri array"""
+#    if (i,j,k,l) in __idx4_cache:
+    return (idx2(i,j),idx2(k,l))
+
 #determine degree of excitation between two dets (as strings of {0,1})
 def n_excit(idet,jdet):
     if idet==jdet:
         return 0
+    #this gets slower if 'hamweight' function is used
     return (bin(int(idet,2)^int(jdet,2)).count('1'))/2
+
+#get hamming weight
+#technically, this is the number of nonzero bits in a binary int, but we might be using strings
+def hamweight(strdet):
+    return strdet.count('1')
+
+#slower implementations
+#--------------------------------------------
+#def ham1(strdet):
+#    return sum(map(int,list(strdet)))
+#def ham2(strdet):
+#    return sum(i=="1" for i in strdet)
+#def ham3(strdet):
+#    s=0
+#    for i in strdet:
+#        if i=="1":
+#            s+=1
+#    return s
+#def ham4(strdet):
+#    return sum([1 for i in strdet if i=="1"])
+#--------------------------------------------
 
 #return alpha/beta elements of det (either as a string or as a list of one-char strings)
 def alpha(det):
@@ -49,8 +78,7 @@ mol = gto.M(
     verbose = 1,
     unit='b'
 )
-cdets = 25
-tdets = 50
+NaNb=mol.nelec #tuple with (N_alpha, N_beta)
 nao=mol.nao_nr()
 s = mol.intor('cint1e_ovlp_sph')
 t = mol.intor('cint1e_kin_sph')
@@ -78,6 +106,8 @@ E = myhf.kernel()
 c = myhf.mo_coeff
 h1e = reduce(np.dot, (c.T, myhf.get_hcore(), c))
 eri = ao2mo.kernel(mol, c)
+cdets = 25
+tdets = 50
 #use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
 
 #make full 4-index eris in MO basis (only for testing idx2)
@@ -134,12 +164,15 @@ for i in range(ndets):
     for ii, (ia, ib) in enumerate(zip(ideta,idetb)):
         if "1" in ia+ib:
             hii+= (int(ia)+int(ib))*h1e[ii,ii]
-            jii=eri[idx2(ii,ii),idx2(ii,ii)]
+#            jii=eri[idx2(ii,ii),idx2(ii,ii)]
+            jii=eri[idx4(ii,ii,ii,ii)]
             if ia+ib == "11":
                 hii += jii
             for jj,ja,jb in zip(range(ii+1,nao),ideta[ii+1:],idetb[ii+1:]):
-                jij=eri[idx2(ii,ii),idx2(jj,jj)]
-                kij=eri[idx2(ii,jj),idx2(jj,ii)]
+#                jij=eri[idx2(ii,ii),idx2(jj,jj)]
+#                kij=eri[idx2(ii,jj),idx2(jj,ii)]
+                jij=eri[idx4(ii,ii,jj,jj)]
+                kij=eri[idx4(ii,jj,jj,ii)]
                 if ia+jb=="11":
                     hii += jij
                 if ib+ja=="11":
