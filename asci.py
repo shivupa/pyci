@@ -54,6 +54,26 @@ def occ_alpha(detstring):
     alphastring = alpha(detstring)
     occlist=[]
 
+def gen_dets(norb,na,nb):
+    """generate all determinants with a given number of spatial orbitals 
+    and alpha,beta electrons.
+    return a list of 2-tuples of strings"""
+    adets=[]
+    for alist in itertools.combinations(range(norb),na):
+        idet=["0" for i in range(norb)]
+        for orb in alist:
+            idet[orb]="1"
+        adets.append(''.join(idet))
+    if na==nb:
+        blist=alist[:]
+    else:
+        bdets=[]
+        for blist in itertools.combinations(range(norb),nb):
+            idet=["0" for i in range(norb)]
+            for orb in blist:
+                idet[orb]="1"
+            bdets.append(''.join(idet))
+    return [(i,j) for i in alist for b in blist]
 
 def d_a_b_occ(idet):
     """given idet as a 2-tuple of alpha,beta bitstrings, 
