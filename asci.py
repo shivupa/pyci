@@ -17,15 +17,15 @@ def idx2(i,j):
     if (i,j) in __idx2_cache:
         return __idx2_cache[i,j]
     elif i>j:
-        __idx2_cache[i,j] = i*(i+1)/2+j
+        __idx2_cache[i,j] = int(i*(i+1)/2+j)
     else:
-        __idx2_cache[i,j] = j*(j+1)/2+i
+        __idx2_cache[i,j] = int(j*(j+1)/2+i)
     return __idx2_cache[i,j]
 
 #not sure whether caching is worthwhile here if this just calls idx2, which is already cached 
 #__idx4_cache = {}
 def idx4(i,j,k,l):
-    """idx4(i,j,k,l) returns 2-tuple corresponding to (ij|kl) in square eri array"""
+    """idx4(i,j,k,l) returns 2-tuple corresponding to (ij|kl) in square eri array (with 4-fold symmetry?)"""
 #    if (i,j,k,l) in __idx4_cache:
     return (idx2(i,j),idx2(k,l))
 
@@ -41,33 +41,44 @@ def n_excit(idet,jdet):
 def hamweight(strdet):
     return strdet.count('1')
 
-#slower implementations
-#--------------------------------------------
-#def ham1(strdet):
-#    return sum(map(int,list(strdet)))
-#def ham2(strdet):
-#    return sum(i=="1" for i in strdet)
-#def ham3(strdet):
-#    s=0
-#    for i in strdet:
-#        if i=="1":
-#            s+=1
-#    return s
-#def ham4(strdet):
-#    return sum([1 for i in strdet if i=="1"])
-#--------------------------------------------
-
 #return alpha/beta elements of det (either as a string or as a list of one-char strings)
 def alpha(det):
     return det[::2]
 def beta(det):
     return det[1::2]
 
+def bitstr2intlist(detstr):
+    return list(map(int,list(detstr)))
+
 def occ_alpha(detstring):
     alphastring = alpha(detstring)
     occlist=[]
     
+def d_a_b_occ(idet):
+    docc = []
+    aocc = []
+    bocc = []
+    aint,bint = map(bitstr2intlist,idet)
+    for i, (a, b) in enumerate(zip(aint,bint)):
+        if a & b:
+            docc.append(i)
+        elif a & ~b:
+            aocc.append(i)
+        elif b & ~a:
+            bocc.append(i)
+    return (docc,aocc,bocc)
 
+def calc_hii(idet,hcore,eri):
+    hii=0.0
+    docc,aocc,bocc = d_a_b_occ(idet)
+    for di in docc:
+        hii += 2.0 * hcore[di,di]
+        for dj in docc:
+            hii += 2.0 * eri[idx4(di,di,dj,dj)]
+            hii -= eri[idx4(di,dj,dj,di)]
+        for si in aocc+bocc:
+            hii += eri[idx4(dj,dj,si,si)]
+            hii -= 0.5 * eri[idx4(dj,si,si,dj)]
 
 
 mol = gto.M(
@@ -78,7 +89,7 @@ mol = gto.M(
     verbose = 1,
     unit='b'
 )
-NaNb=mol.nelec #tuple with (N_alpha, N_beta)
+Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
 nao=mol.nao_nr()
 s = mol.intor('cint1e_ovlp_sph')
 t = mol.intor('cint1e_kin_sph')
@@ -135,6 +146,8 @@ H_target = np.array((tdets,tdets))
 
 #generate all determinants
 
+a_dets=[]
+b_dets=[]
 
 fulldetlist=[] #mapping from det number to bitstring (consider using int instead of string? or two ints/strings for alpha and beta spin)
 detid={} #mapping from bitstring to det number (not sure whether this will be necessary, but might make things easier for now)
@@ -165,6 +178,10 @@ for i in range(ndets):
         if "1" in ia+ib:
             hii+= (int(ia)+int(ib))*h1e[ii,ii]
 #            jii=eri[idx2(ii,ii),idx2(ii,ii)]
+# double double:              2 * (ii|jj) - (ij|ji)
+# single single parallel:     0.5 * ((ii|jj) - (ij|ji))
+# single single antiparallel: 0.5 * (ii|jj)
+# double single:              (ii|jj) - 0.5 * (ij|ji)
             jii=eri[idx4(ii,ii,ii,ii)]
             if ia+ib == "11":
                 hii += jii
