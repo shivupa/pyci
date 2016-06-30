@@ -12,6 +12,7 @@ import copy
 # INPUT
 #############
 #2-index transformation for accessing eri elements with standard 4 indices
+#TODO: only cache i<j elements?
 __idx2_cache = {}
 def idx2(i,j):
     if (i,j) in __idx2_cache:
@@ -37,8 +38,9 @@ def n_excit(idet,jdet):
     occupations"""
     if idet==jdet:
         return 0
-    #this gets slower if 'hamweight' function is used
-    return (bin(int(idet,2)^int(jdet,2)).count('1'))/2
+    aexc = (bin(int(idet[0],2)^int(jdet[0],2)).count('1'))/2 
+    bexc = (bin(int(idet[1],2)^int(jdet[1],2)).count('1'))/2 
+    return aexc+bexc
 
 #get hamming weight
 #technically, this is the number of nonzero bits in a binary int, but we might be using strings
@@ -66,7 +68,7 @@ def gen_dets(norb,na,nb):
         adets.append(''.join(idet))
     if na==nb:
         #if nb==na, make a copy of the alpha strings (beta will be the same)
-        blist=alist[:]
+        bdets=adets[:]
     else:
         bdets=[]
         for blist in itertools.combinations(range(norb),nb):
@@ -75,7 +77,7 @@ def gen_dets(norb,na,nb):
                 idet[orb]="1"
             bdets.append(''.join(idet))
     #return all pairs of (alpha,beta) strings
-    return [(i,j) for i in alist for b in blist]
+    return [(i,j) for i in adets for j in bdets]
 
 def d_a_b_occ(idet):
     """given idet as a 2-tuple of alpha,beta bitstrings, 
@@ -174,6 +176,7 @@ def d_a_b_single(idet,jdet):
 # double single:              (ii|jj) - 0.5 * (ij|ji)
 
 #TODO: test to make sure there aren't any missing factors of 2 or 0.5
+#TODO: just use alpha/beta occ lists instead of double/single occ lists
 def calc_hii(idet,hcore,eri):
     hii=0.0
     docc,aocc,bocc = d_a_b_occ(idet)
@@ -198,6 +201,7 @@ def calc_hii(idet,hcore,eri):
     for ai in aocc:
         for bj in bocc:
             hii += 0.5 * eri[idx4(ai,ai,bj,bj)]
+    return hii
 # Hij(a->r) in spinorbs:
 # <r|hcore|i> + sum_j^{occ(both)} (ri|jj) - (rj|ji)
 # multiply by appropriate sign
@@ -214,6 +218,7 @@ def calc_hij_single(idet,jdet,hcore,eri):
         hij -= eri[idx4(part,si,si,hole)]
     for si in (bocc,aocc)[spin]:
         hij += eri[idx4(part,hole,si,si)]
+    return hij
 
 
 mol = gto.M(
@@ -281,20 +286,9 @@ H_target = np.array((tdets,tdets))
 
 #generate all determinants
 
-a_dets=[]
-b_dets=[]
 
-fulldetlist=[] #mapping from det number to bitstring (consider using int instead of string? or two ints/strings for alpha and beta spin)
-detid={} #mapping from bitstring to det number (not sure whether this will be necessary, but might make things easier for now)
-detcount=0
-for occlist in itertools.combinations(range(num_orbs),num_occ):
-    idet=["0" for i in range(num_orbs)]
-    for orb in occlist:
-        idet[orb]="1"
-    fulldetlist.append(''.join(idet))
-    detid[''.join(idet)]=detcount
-    detcount+=1
-ndets=int(sp.special.binom(num_orbs,num_occ))
+fulldetlist=gen_dets(nao,Na,Nb) 
+ndets=len(fulldetlist)
 #start with HF determinant
 original_detdict = {fulldetlist[0]:1.0}
 #lists for csr sparse storage of hamiltonian
@@ -303,65 +297,26 @@ hrow=[]
 hcol=[]
 hval=[]
 for i in range(ndets):
-    hii=0.0 #placeholder: generate hii here
-
     idet=fulldetlist[i]
-    ideta=alpha(idet)
-    idetb=beta(idet)
-#might be better to just loop over occupied orbs instead of over all indices
-    for ii, (ia, ib) in enumerate(zip(ideta,idetb)):
-        if "1" in ia+ib:
-            hii+= (int(ia)+int(ib))*h1e[ii,ii]
-#            jii=eri[idx2(ii,ii),idx2(ii,ii)]
-            jii=eri[idx4(ii,ii,ii,ii)]
-            if ia+ib == "11":
-                hii += jii
-            for jj,ja,jb in zip(range(ii+1,nao),ideta[ii+1:],idetb[ii+1:]):
-#                jij=eri[idx2(ii,ii),idx2(jj,jj)]
-#                kij=eri[idx2(ii,jj),idx2(jj,ii)]
-                jij=eri[idx4(ii,ii,jj,jj)]
-                kij=eri[idx4(ii,jj,jj,ii)]
-                if ia+jb=="11":
-                    hii += jij
-                if ib+ja=="11":
-                    hii += jij
-                if ia+ja=="11":
-                    hii += jij
-                    hii -= kij
-                if ib+jb=="11":
-                    hii += jij
-                    hii -= kij
+    hii = calc_hii(idet,h1e,eri)
     hrow.append(i)
     hcol.append(i)
     hval.append(hii)
-#    for j in range(i+1,ndets):
-#
-#        jdet=fulldetlist[j]
-#        nexc_ij = n_excit(idet,jdet)
-#        if nexc_ij <= 2:
-#            jdeta=alpha(jdet)
-#            jdetb=beta(jdet)
-#            hij=0.0 #placeholder: generate hij here
-#            if nexc_ij==2:
-#                (hole1,hole2,part1,part2,sign12)=get_double_exc(idet,jdet)
-#                hij += sign12 * (eri[idx2(part1,hole1),idx2(part2,hole2)] - eri[idx2(part1,hole2),idx2(part2,hole1)])
-#            else:
-#                (hole1,part1,sign1,occsame,occdiff) = get_single_exc(idet,jdet)
-#                samespin = (hole1%2 == part1%2)
-#                if samespin:
-#                    hij += h1e[hole1/2,part1/2]
-#                for ii in occsame:
-#                    hij += eri[idx2(part1
-#
-#
-#
-#                
-#            hrow.append(i)
-#            hrow.append(j)
-#            hcol.append(j)
-#            hcol.append(i)
-#            hval.append(hij)
-#            hval.append(hij)
+    for j in range(i+1,ndets):
+        jdet=fulldetlist[j]
+        nexc_ij = n_excit(idet,jdet)
+        if nexc_ij in (1,2):
+            if nexc_ij==1:
+                hij = calc_hij_single(idet,jdet,h1e,eri)
+            else:
+                hij=2.0
+            #    hij = calc_hij_double
+            hrow.append(i)
+            hrow.append(j)
+            hcol.append(j)
+            hcol.append(i)
+            hval.append(hij)
+            hval.append(hij)
 fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 print(len(fulldetlist))
 
