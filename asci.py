@@ -38,9 +38,17 @@ def n_excit(idet,jdet):
     occupations"""
     if idet==jdet:
         return 0
-    aexc = (bin(int(idet[0],2)^int(jdet[0],2)).count('1'))/2 
-    bexc = (bin(int(idet[1],2)^int(jdet[1],2)).count('1'))/2 
+    aexc = n_excit_spin(idet,jdet,0)
+    bexc = n_excit_spin(idet,jdet,1)
     return aexc+bexc
+
+def n_excit_spin(idet,jdet,spin):
+    """get the hamming weight of a bitwise xor on two determinants.
+    This will show how the number of orbitals in which they have different 
+    occupations"""
+    if idet[spin]==jdet[spin]:
+        return 0
+    return (bin(int(idet[spin],2)^int(jdet[spin],2)).count('1'))/2 
 
 #get hamming weight
 #technically, this is the number of nonzero bits in a binary int, but we might be using strings
@@ -100,15 +108,7 @@ def d_a_b_occ(idet):
             bocc.append(i)
     return (docc,aocc,bocc)
 
-def d_a_b_single(idet,jdet):
-    #if alpha strings are the same for both dets, the difference is in the beta part
-    #alpha is element 0, beta is element 1
-    if idet[0]==jdet[0]:
-        spin=1
-    else:
-        spin=0
-
-    #make lists of ints for the alpha or beta parts of the two dets
+def hole_part_sign_single(idet,jdet,spin):
     holeint,partint = map(bitstr2intlist,(idet[spin],jdet[spin]))
     sign=0 #keep track of parity
     perm=False
@@ -122,7 +122,6 @@ def d_a_b_single(idet,jdet):
         #if only i is occupied, this is the particle orbital
         if h & ~p:
             hole=i
-
             if order==0:
                 #start keeping track of permutation parity
                 perm=True
@@ -130,7 +129,6 @@ def d_a_b_single(idet,jdet):
             else:
                 #stop keeping track of parity
                 perm=False
-
         elif p & ~h:
             part=i
             if order==0:
@@ -143,6 +141,9 @@ def d_a_b_single(idet,jdet):
             if p: #if p & h
                 #if orb is occupied in both dets, change sign of parity
                 sign *= -1
+    return (hole,part,sign)
+
+def d_a_b_1hole(idet,hole,spin):
     #get doubly/singly occ orbs in the first det            
     docc,aocc,bocc = d_a_b_occ(idet)
 
@@ -157,10 +158,21 @@ def d_a_b_single(idet,jdet):
         aocc = sorted(list(set(aocc)-{hole}))
     else:
         bocc = sorted(list(set(bocc)-{hole}))
+    return (docc,aocc,bocc)
 
+def d_a_b_single(idet,jdet):
+    #if alpha strings are the same for both dets, the difference is in the beta part
+    #alpha is element 0, beta is element 1
+    if idet[0]==jdet[0]:
+        spin=1
+    else:
+        spin=0
+    hole,part,sign = hole_part_sign_single(idet,jdet,spin)
+    docc,aocc,bocc = d_a_b_1hole(idet,hole,spin)
     return (hole,part,sign,spin,docc,aocc,bocc)
         
-
+def d_a_b_double(idet,jdet):
+    pass
 # Hii in spinorbs: 
 # sum_i^{occ} <i|hcore|i> + 1/2 sum_{i,j}^{occ} (ii|jj) - (ij|ji)
 
