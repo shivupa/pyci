@@ -1,5 +1,6 @@
 import scipy as sp
 import scipy.linalg as spla
+import scipy.sparse.linalg as splinalg
 import numpy as np
 from functools import reduce
 import pyscf
@@ -369,7 +370,13 @@ for i in range(ndets):
             hval.append(hij)
 fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 print(len(fulldetlist))
+eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=4)
 
+
+print("hii(2222200) = ",fullham[0,0] + mol.energy_nuc())
+print("GAMESS energy = -74.9420799538 ") 
+print("hii(2222020) = ",fullham[22,22] + mol.energy_nuc())
+print("GAMESS energy = -73.9922866074 ") 
 
 #############
 # MAIN LOOP
