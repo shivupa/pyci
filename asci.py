@@ -99,17 +99,80 @@ def d_a_b_occ(idet):
     return (docc,aocc,bocc)
 
 def d_a_b_single(idet,jdet):
+    #if alpha strings are the same for both dets, the difference is in the beta part
+    #alpha is element 0, beta is element 1
     if idet[0]==jdet[0]:
+        spin=1
+    else:
+        spin=0
+
+    #make lists of ints for the alpha or beta parts of the two dets
+    holeint,partint = map(bitstr2intlist,(idet[spin],jdet[spin]))
+    sign=0 #keep track of parity
+    perm=False
+    #to be used in keeping track of parity
+    if idet[spin]<jdet[spin]:
+        order=1 #we're going to get to the particle first
+    else:
+        order=0 #we're going to get to the hole first
+
+    for i, (h, p) in enumerate(zip(holeint,partint)):
+        #if only i is occupied, this is the particle orbital
+        if h & ~p:
+            hole=i
+
+            if order==0:
+                #start keeping track of permutation parity
+                perm=True
+                sign=1
+            else:
+                #stop keeping track of parity
+                perm=False
+
+        elif p & ~h:
+            part=i
+            if order==0:
+                perm=False
+            else:
+                perm=True
+                sign=1
+        elif perm==True:
+            #if we're keeping track of parity (i.e. if we're between hole and particle indices)
+            if p: #if p & h
+                #if orb is occupied in both dets, change sign of parity
+                sign *= -1
+    #get doubly/singly occ orbs in the first det            
+    docc,aocc,bocc = d_a_b_occ(idet)
+
+    #correct for the excitation to get only the orbs that are occupied in both dets
+    if hole in docc:
+        docc = sorted(list(set(docc)-{hole}))
+        if spin==1:
+            aocc.append(hole)
+        else:
+            bocc.append(hole)
+    elif spin==0:
+        aocc = sorted(list(set(aocc)-{hole}))
+    else:
+        bocc = sorted(list(set(bocc)-{hole}))
+
+    return (hole,part,sign,spin,docc,aocc,bocc)
         
 
 # Hii in spinorbs: 
 # sum_i^{occ} <i|hcore|i> + 1/2 sum_{i,j}^{occ} (ii|jj) - (ij|ji)
 
-# 2el contribution in spatial orbs (singly or doubly occupied):
+# Hii in spatial orbs:
+#  1-electron terms:
+# sum_i^{singly-occ} <i|hcore|i>
+# + sum_i^{doubly-occ} 2 * <i|hcore|i>
+
+#   2-electron terms:
 # double double:              2 * (ii|jj) - (ij|ji)
 # single single parallel:     0.5 * ((ii|jj) - (ij|ji))
 # single single antiparallel: 0.5 * (ii|jj)
 # double single:              (ii|jj) - 0.5 * (ij|ji)
+
 #TODO: test to make sure there aren't any missing factors of 2 or 0.5
 def calc_hii(idet,hcore,eri):
     hii=0.0
@@ -135,10 +198,23 @@ def calc_hii(idet,hcore,eri):
     for ai in aocc:
         for bj in bocc:
             hii += 0.5 * eri[idx4(ai,ai,bj,bj)]
-
+# Hij(a->r) in spinorbs:
+# <r|hcore|i> + sum_j^{occ(both)} (ri|jj) - (rj|ji)
+# multiply by appropriate sign
+# (parity of permutation that puts orbitals back in normal order from direct hole->particle substitution)
 def calc_hij_single(idet,jdet,hcore,eri):
     hij=0.0
-    hole,part,sign,idocc,iaocc,ibocc = d_a_b_single(idet,jdet)
+    hole,part,sign,spin,docc,aocc,bocc = d_a_b_single(idet,jdet)
+    hij += hcore[part,hole]
+    for di in docc:
+        hij += 2.0 * eri[idx4(part,hole,di,di)]
+        hij -= eri[idx4(part,di,di,hole)]
+    for si in (aocc,bocc)[spin]:
+        hij += eri[idx4(part,hole,si,si)]
+        hij -= eri[idx4(part,si,si,hole)]
+    for si in (bocc,aocc)[spin]:
+        hij += eri[idx4(part,hole,si,si)]
+
 
 mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
