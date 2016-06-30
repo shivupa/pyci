@@ -11,6 +11,8 @@ import copy
 #############
 # INPUT
 #############
+#TODO: implement function that finds particles/holes based on set operations (will be easier with aocc,bocc lists of indices instead of docc,aocc(single),bocc(single)
+
 #2-index transformation for accessing eri elements with standard 4 indices
 #TODO: only cache i<j elements?
 __idx2_cache = {}
@@ -110,38 +112,49 @@ def d_a_b_occ(idet):
 
 def hole_part_sign_single(idet,jdet,spin):
     holeint,partint = map(bitstr2intlist,(idet[spin],jdet[spin]))
-    sign=0 #keep track of parity
-    perm=False
-    #to be used in keeping track of parity
-    if idet[spin]<jdet[spin]:
-        order=1 #we're going to get to the particle first
-    else:
-        order=0 #we're going to get to the hole first
 
     for i, (h, p) in enumerate(zip(holeint,partint)):
         #if only i is occupied, this is the particle orbital
         if h & ~p:
             hole=i
-            if order==0:
-                #start keeping track of permutation parity
-                perm=True
-                sign=1
-            else:
-                #stop keeping track of parity
-                perm=False
         elif p & ~h:
             part=i
-            if order==0:
-                perm=False
-            else:
-                perm=True
-                sign=1
-        elif perm==True:
-            #if we're keeping track of parity (i.e. if we're between hole and particle indices)
-            if p: #if p & h
-                #if orb is occupied in both dets, change sign of parity
-                sign *= -1
+    sign = getsign(holeint,partint,h,p)
     return (hole,part,sign)
+
+def holes_parts_sign_double(idet,jdet,spin):
+    holeint,partint = map(bitstr2intlist,(idet[spin],jdet[spin]))
+    holes=[]
+    parts=[]
+    for i, (h,p) in enumerate(zip(holeint,partint)):
+        if h & ~p:
+            holes.append(i)
+        elif p & ~h:
+            parts.append(i)
+    h1,h2 = holes
+    p1,p2 = parts
+    
+    sign1 = getsign(holeint,partint,h1,p1)
+    sign2 = getsign(holeint,partint,h2,p2)
+    return (h1,h2,p1,p2,sign1*sign2)
+
+def getsign(holeint,partint,h,p):
+    
+    #determine which index comes first (hole or particle) for each pair
+    if h < p:
+        stri = holeint[h+1:p-1]
+        strj = partint[h+1:p-1]
+    else:
+        stri = holeint[p+1:h-1]
+        strj = partint[p+1:h-1]
+    sign=1
+    for i,j in zip(stri,strj):
+        if i & j:
+            sign *= -1
+    return sign
+
+
+
 
 def hole_part_sign_spin_double(idet,jdet):
     #if the two excitations are of different spin, just do them individually
@@ -158,13 +171,14 @@ def hole_part_sign_spin_double(idet,jdet):
         else:
             spin = 0
         #TODO get holes, particles, and sign
+        hole1,hole2,part1,part2,sign = holes_parts_sign_double(idet,jdet,spin)
     return (hole1,hole2,part1,part2,sign,samespin)
 
 def d_a_b_1hole(idet,hole,spin):
     #get doubly/singly occ orbs in the first det            
     docc,aocc,bocc = d_a_b_occ(idet)
 
-    #correct for the excitation to get only the orbs that are occupied in both dets
+    #account for the excitation to obtain only the orbs that are occupied in both dets
     if hole in docc:
         docc = sorted(list(set(docc)-{hole}))
         if spin==1:
@@ -345,8 +359,8 @@ for i in range(ndets):
             if nexc_ij==1:
                 hij = calc_hij_single(idet,jdet,h1e,eri)
             else:
-                hij=2.0
-            #    hij = calc_hij_double
+            #    hij=2.0
+                hij = calc_hij_double(idet,jdet,h1e,eri)
             hrow.append(i)
             hrow.append(j)
             hcol.append(j)
