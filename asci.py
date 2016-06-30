@@ -143,6 +143,23 @@ def hole_part_sign_single(idet,jdet,spin):
                 sign *= -1
     return (hole,part,sign)
 
+def hole_part_sign_spin_double(idet,jdet):
+    #if the two excitations are of different spin, just do them individually
+    x0 = n_excit_spin(idet,jdet,0) 
+    if x0==1:
+        samespin=False
+        hole1,part1,sign1 = hole_part_sign_single(idet,jdet,0)
+        hole2,part2,sign2 = hole_part_sign_single(idet,jdet,1)
+        sign = sign1 * sign2
+    else:
+        samespin=True
+        if x0==0:
+            spin = 1
+        else:
+            spin = 0
+        #TODO get holes, particles, and sign
+    return (hole1,hole2,part1,part2,sign,samespin)
+
 def d_a_b_1hole(idet,hole,spin):
     #get doubly/singly occ orbs in the first det            
     docc,aocc,bocc = d_a_b_occ(idet)
@@ -171,8 +188,6 @@ def d_a_b_single(idet,jdet):
     docc,aocc,bocc = d_a_b_1hole(idet,hole,spin)
     return (hole,part,sign,spin,docc,aocc,bocc)
         
-def d_a_b_double(idet,jdet):
-    pass
 # Hii in spinorbs: 
 # sum_i^{occ} <i|hcore|i> + 1/2 sum_{i,j}^{occ} (ii|jj) - (ij|ji)
 
@@ -230,8 +245,17 @@ def calc_hij_single(idet,jdet,hcore,eri):
         hij -= eri[idx4(part,si,si,hole)]
     for si in (bocc,aocc)[spin]:
         hij += eri[idx4(part,hole,si,si)]
+    hij += sign
     return hij
 
+def calc_hij_double(idet,jdet,hcore,eri):
+    hij=0.0
+    h1,h2,p1,p2,sign,samespin = hole_part_sign_spin_double(idet,jdet)
+    hij += eri[idx4(p1,h1,p2,h2)]
+    if samespin:
+        hij -= eri[idx4(p1,h2,p2,h1)]
+    hij *= sign
+    return hij
 
 mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
