@@ -139,18 +139,22 @@ def holes_parts_sign_double(idet,jdet,spin):
     sign2 = getsign(holeint,partint,h2,p2)
     return (h1,h2,p1,p2,sign1*sign2)
 
-def getsign(holeint,partint,h,p):
+def getsign(holeint,partint,h,p,debug=False):
     
     #determine which index comes first (hole or particle) for each pair
     if h < p:
-        stri = holeint[h+1:p-1]
-        strj = partint[h+1:p-1]
+        stri = holeint[h:p]
+        strj = partint[h:p]
     else:
-        stri = holeint[p+1:h-1]
-        strj = partint[p+1:h-1]
+        stri = holeint[p:h]
+        strj = partint[p:h]
     sign=1
     for i,j in zip(stri,strj):
+        if debug:
+            print(i,j)
         if i & j:
+            if debug:
+                print ("signchange")
             sign *= -1
     return sign
 
