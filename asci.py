@@ -96,9 +96,12 @@ def d_a_b_occ(idet):
 # single single parallel:     0.5 * ((ii|jj) - (ij|ji))
 # single single antiparallel: 0.5 * (ii|jj)
 # double single:              (ii|jj) - 0.5 * (ij|ji)
+#TODO: test to make sure there aren't any missing factors of 2 or 0.5
 def calc_hii(idet,hcore,eri):
     hii=0.0
     docc,aocc,bocc = d_a_b_occ(idet)
+    for si in aocc+bocc:
+        hii += hcore[si,si]
     for di in docc:
         hii += 2.0 * hcore[di,di]
         for dj in docc:
