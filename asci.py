@@ -25,12 +25,16 @@ def idx2(i,j):
 #not sure whether caching is worthwhile here if this just calls idx2, which is already cached 
 #__idx4_cache = {}
 def idx4(i,j,k,l):
-    """idx4(i,j,k,l) returns 2-tuple corresponding to (ij|kl) in square eri array (with 4-fold symmetry?)"""
+    """idx4(i,j,k,l) returns 2-tuple corresponding to (ij|kl) in 
+    square eri array (size n*(n-1)/2 square) (4-fold symmetry?)"""
 #    if (i,j,k,l) in __idx4_cache:
     return (idx2(i,j),idx2(k,l))
 
 #determine degree of excitation between two dets (as strings of {0,1})
 def n_excit(idet,jdet):
+    """get the hamming weight of a bitwise xor on two determinants.
+    This will show how the number of orbitals in which they have different 
+    occupations"""
     if idet==jdet:
         return 0
     #this gets slower if 'hamweight' function is used
@@ -41,30 +45,27 @@ def n_excit(idet,jdet):
 def hamweight(strdet):
     return strdet.count('1')
 
-#return alpha/beta elements of det (either as a string or as a list of one-char strings)
-def alpha(det):
-    return det[::2]
-def beta(det):
-    return det[1::2]
-
 def bitstr2intlist(detstr):
+    """turn a string into a list of ints
+    input of "1100110" will return [1,1,0,0,1,1,0]"""
     return list(map(int,list(detstr)))
-
-def occ_alpha(detstring):
-    alphastring = alpha(detstring)
-    occlist=[]
 
 def gen_dets(norb,na,nb):
     """generate all determinants with a given number of spatial orbitals 
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
     adets=[]
+    #loop over all subsets of size na from the list of orbitals
     for alist in itertools.combinations(range(norb),na):
+        #start will all orbs unoccupied
         idet=["0" for i in range(norb)]
         for orb in alist:
+            #for each occupied orbital (index), replace the "0" with a "1"
             idet[orb]="1"
+        #turn the list into a string
         adets.append(''.join(idet))
     if na==nb:
+        #if nb==na, make a copy of the alpha strings (beta will be the same)
         blist=alist[:]
     else:
         bdets=[]
@@ -73,6 +74,7 @@ def gen_dets(norb,na,nb):
             for orb in blist:
                 idet[orb]="1"
             bdets.append(''.join(idet))
+    #return all pairs of (alpha,beta) strings
     return [(i,j) for i in alist for b in blist]
 
 def d_a_b_occ(idet):
@@ -82,16 +84,28 @@ def d_a_b_occ(idet):
     docc = []
     aocc = []
     bocc = []
+#make two lists of ints so we can use binary logical operators on them
     aint,bint = map(bitstr2intlist,idet)
     for i, (a, b) in enumerate(zip(aint,bint)):
         if a & b:
+            #if alpha and beta, then this orbital is doubly occupied
             docc.append(i)
         elif a & ~b:
+            #if alpha and not beta, then this is singly occupied (alpha)
             aocc.append(i)
         elif b & ~a:
+            #if beta and not alpha, then this is singly occupied (beta)
             bocc.append(i)
     return (docc,aocc,bocc)
 
+def d_a_b_single(idet,jdet):
+    if idet[0]==jdet[0]:
+        
+
+# Hii in spinorbs: 
+# sum_i^{occ} <i|hcore|i> + 1/2 sum_{i,j}^{occ} (ii|jj) - (ij|ji)
+
+# 2el contribution in spatial orbs (singly or doubly occupied):
 # double double:              2 * (ii|jj) - (ij|ji)
 # single single parallel:     0.5 * ((ii|jj) - (ij|ji))
 # single single antiparallel: 0.5 * (ii|jj)
@@ -122,7 +136,9 @@ def calc_hii(idet,hcore,eri):
         for bj in bocc:
             hii += 0.5 * eri[idx4(ai,ai,bj,bj)]
 
-
+def calc_hij_single(idet,jdet,hcore,eri):
+    hij=0.0
+    hole,part,sign,idocc,iaocc,ibocc = d_a_b_single(idet,jdet)
 
 mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
