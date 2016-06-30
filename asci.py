@@ -370,9 +370,17 @@ for i in range(ndets):
             hval.append(hij)
 fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 print(len(fulldetlist))
-eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=4)
+eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=10)
+eig_vals_sorted = sorted(eig_vals)[:4] + mol.energy_nuc()
+eig_vals_gamess = [-75.0129802245,
+                   -74.7364625517,
+                   -74.6886742417,
+                   -74.6531877287]
+print("pyci eigvals vs GAMESS eigvals")
+for i,j in zip(eig_vals_sorted, eig_vals_gamess):
+    print(i,j)
 
-
+print("pyci matrix elements vs GAMESS matrix elements")
 print("hii(2222200) = ",fullham[0,0] + mol.energy_nuc())
 print("GAMESS energy = -74.9420799538 ") 
 print("hii(2222020) = ",fullham[22,22] + mol.energy_nuc())
