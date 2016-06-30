@@ -245,7 +245,7 @@ def calc_hij_single(idet,jdet,hcore,eri):
         hij -= eri[idx4(part,si,si,hole)]
     for si in (bocc,aocc)[spin]:
         hij += eri[idx4(part,hole,si,si)]
-    hij += sign
+    hij *= sign
     return hij
 
 def calc_hij_double(idet,jdet,hcore,eri):
