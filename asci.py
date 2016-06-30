@@ -53,8 +53,12 @@ def bitstr2intlist(detstr):
 def occ_alpha(detstring):
     alphastring = alpha(detstring)
     occlist=[]
-    
+
+
 def d_a_b_occ(idet):
+    """given idet as a 2-tuple of alpha,beta bitstrings, 
+    return 3-tuple of lists of indices of 
+    doubly-occupied, singly-occupied (alpha), singly-occupied (beta) orbitals"""
     docc = []
     aocc = []
     bocc = []
@@ -68,6 +72,10 @@ def d_a_b_occ(idet):
             bocc.append(i)
     return (docc,aocc,bocc)
 
+# double double:              2 * (ii|jj) - (ij|ji)
+# single single parallel:     0.5 * ((ii|jj) - (ij|ji))
+# single single antiparallel: 0.5 * (ii|jj)
+# double single:              (ii|jj) - 0.5 * (ij|ji)
 def calc_hii(idet,hcore,eri):
     hii=0.0
     docc,aocc,bocc = d_a_b_occ(idet)
@@ -77,8 +85,20 @@ def calc_hii(idet,hcore,eri):
             hii += 2.0 * eri[idx4(di,di,dj,dj)]
             hii -= eri[idx4(di,dj,dj,di)]
         for si in aocc+bocc:
-            hii += eri[idx4(dj,dj,si,si)]
-            hii -= 0.5 * eri[idx4(dj,si,si,dj)]
+            hii += 2.0 * eri[idx4(dj,dj,si,si)]
+            hii -= eri[idx4(dj,si,si,dj)]
+    for ai in aocc:
+        for aj in aocc:
+            hii += 0.5 * eri[idx4(ai,ai,aj,aj)]
+            hii -= 0.5 * eri[idx4(ai,aj,aj,ai)]
+    for bi in bocc:
+        for bj in bocc:
+            hii += 0.5 * eri[idx4(bi,bi,bj,bj)]
+            hii -= 0.5 * eri[idx4(bi,bj,bj,bi)]
+    for ai in aocc:
+        for bj in bocc:
+            hii += 0.5 * eri[idx4(ai,ai,bj,bj)]
+
 
 
 mol = gto.M(
@@ -178,10 +198,6 @@ for i in range(ndets):
         if "1" in ia+ib:
             hii+= (int(ia)+int(ib))*h1e[ii,ii]
 #            jii=eri[idx2(ii,ii),idx2(ii,ii)]
-# double double:              2 * (ii|jj) - (ij|ji)
-# single single parallel:     0.5 * ((ii|jj) - (ij|ji))
-# single single antiparallel: 0.5 * (ii|jj)
-# double single:              (ii|jj) - 0.5 * (ij|ji)
             jii=eri[idx4(ii,ii,ii,ii)]
             if ia+ib == "11":
                 hii += jii
