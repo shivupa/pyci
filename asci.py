@@ -152,6 +152,12 @@ def hole_part_sign_single(idet,jdet,spin,debug=False):
     sign = getsign(holeint,partint,hole,part)
     return (hole,part,sign)
 
+def signstr(s1,s2,h1,p1):
+    holeint,partint = map(bitstr2intlist,(s1,s2))
+    print(holeint)
+    print(partint)
+    return getsign(holeint,partint,h1,p1,debug=True)
+
 def holes_parts_sign_double(idet,jdet,spin):
     holeint,partint = map(bitstr2intlist,(idet[spin],jdet[spin]))
     holes=[]
@@ -183,6 +189,8 @@ def getsign(holeint,partint,h,p,debug=False):
         stri = holeint[p:h]
         strj = partint[p:h]
     sign=1
+    if debug:
+        print(stri,strj)
     for i,j in zip(stri,strj):
         if debug:
             print(i,j)
@@ -548,3 +556,13 @@ for i in new_detdict:
     print(i, new_detdict[i])
 print(sorted(new_detdict.items(), key=lambda x: x[1]))
 print(len(new_detdict))
+
+#one of these agrees with gamess and one does not
+#print("d_a_b_single(('1111100','1110110'),('1111100','1111100'))")
+#d_a_b_single(('1111100','1110110'),('1111100','1111100'))
+
+#print("d_a_b_single(('1111100','1011110'),('1111100','1110110'))")
+#print(d_a_b_single(('1111100','1011110'),('1111100','1110110')))
+
+#print("d_a_b_single(('1111100','1110011'),('1111100','1111001'))")
+#print(d_a_b_single(('1111100','1110011'),('1111100','1111001')))
