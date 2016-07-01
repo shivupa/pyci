@@ -442,7 +442,18 @@ print("GAMESS energy = -73.9922866074 ")
 
 badlist=[]
 goodlist=[]
-with open("./h2o-ref/ham-0","r") as f:
+#ham-0: 15 ok (these are dets with no singly occupied orbs)
+#ham-0: 284 not ok (these all have some singly occupied orbs)
+#ham-0: (double excitations out of lowest orb are not output by gamess?)
+
+#ham-1: 266 ok nonzero
+#ham-1: 1736 ok zero
+#ham-1: 464 with wrong sign
+
+#ham-2: 1942 ok nonzero
+#ham-2: 9544 ok zero
+#ham-2: 1744 with wrong sign
+with open("./h2o-ref/ham-2","r") as f:
     for line in f:
         numbers_str = line.split()
 #        print(numbers_str)
