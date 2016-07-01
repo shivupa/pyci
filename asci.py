@@ -63,6 +63,14 @@ def bitstr2intlist(detstr):
     input of "1100110" will return [1,1,0,0,1,1,0]"""
     return list(map(int,list(detstr)))
 
+def occ2bitstr(occlist,norb,index=0):
+    bitlist=["0" for i in range(norb)]
+    for i in occlist:
+        bitlist[i-index]="1"
+    return ''.join(bitlist)
+
+
+
 def gen_dets(norb,na,nb):
     """generate all determinants with a given number of spatial orbitals 
     and alpha,beta electrons.
@@ -110,6 +118,20 @@ def d_a_b_occ(idet):
             #if beta and not alpha, then this is singly occupied (beta)
             bocc.append(i)
     return (docc,aocc,bocc)
+
+def a_b_occ(idet):
+    """given idet as a 2-tuple of alpha,beta bitstrings, 
+    return 2-tuple of lists of indices of 
+    occupied alpha and beta orbitals"""
+    aocc = []
+    bocc = []
+    aint,bint = map(bitstr2intlist,idet)
+    for i, (a, b) in enumerate(zip(aint,bint)):
+        if a:
+            aocc.append(i)
+        if b:
+            bocc.append(i)
+    return (aocc,bocc)
 
 def hole_part_sign_single(idet,jdet,spin,debug=False):
     holeint,partint = map(bitstr2intlist,(idet[spin],jdet[spin]))
@@ -395,6 +417,39 @@ print("hii(2222200) = ",fullham[0,0] + mol.energy_nuc())
 print("GAMESS energy = -74.9420799538 ") 
 print("hii(2222020) = ",fullham[22,22] + mol.energy_nuc())
 print("GAMESS energy = -73.9922866074 ") 
+
+badlist=[]
+goodlist=[]
+with open("./h2o-ref/h2o-fci-ints-sorted-ji","r") as f:
+    for line in f:
+        numbers_str = line.split()
+#        print(numbers_str)
+        a1occ=occ2bitstr(map(int,numbers_str[0:5]),7,1)
+        b1occ=occ2bitstr(map(int,numbers_str[5:10]),7,1)
+        a2occ=occ2bitstr(map(int,numbers_str[10:15]),7,1)
+        b2occ=occ2bitstr(map(int,numbers_str[15:20]),7,1)
+#        print(a1occ,b1occ,a2occ,b2occ)
+        val=float(numbers_str[20])
+        det1=(a1occ,b1occ)
+        det2=(a2occ,b2occ)
+        hij=55.0
+        nexc=n_excit(det1,det2)
+        nexca=n_excit_spin(det1,det2,0)
+        nexcb=n_excit_spin(det1,det2,1)
+        if nexc==1:
+            hij=calc_hij_single(det1,det2,h1e,eri)
+        elif nexc==2:
+            hij=calc_hij_double(det1,det2,h1e,eri)
+        if abs(val-hij) > 0.0000001:
+            badlist.append((det1,det2,nexc,nexca,nexcb,val,hij))
+        else:
+            goodlist.append((det1,det2,nexc,nexca,nexcb,val,hij))
+good1=[i for i in goodlist if i[2]==1]
+good2=[i for i in goodlist if i[2]==2]
+bad1=[i for i in badlist if i[2]==1]
+bad2=[i for i in badlist if i[2]==2]
+
+
 
 #############
 # MAIN LOOP
