@@ -26,10 +26,10 @@ def idx2(i,j):
         __idx2_cache[i,j] = int(j*(j+1)/2+i)
     return __idx2_cache[i,j]
 
-#not sure whether caching is worthwhile here if this just calls idx2, which is already cached 
+#not sure whether caching is worthwhile here if this just calls idx2, which is already cached
 #__idx4_cache = {}
 def idx4(i,j,k,l):
-    """idx4(i,j,k,l) returns 2-tuple corresponding to (ij|kl) in 
+    """idx4(i,j,k,l) returns 2-tuple corresponding to (ij|kl) in
     square eri array (size n*(n-1)/2 square) (4-fold symmetry?)"""
 #    if (i,j,k,l) in __idx4_cache:
     return (idx2(i,j),idx2(k,l))
@@ -37,7 +37,7 @@ def idx4(i,j,k,l):
 #determine degree of excitation between two dets (as strings of {0,1})
 def n_excit(idet,jdet):
     """get the hamming weight of a bitwise xor on two determinants.
-    This will show how the number of orbitals in which they have different 
+    This will show how the number of orbitals in which they have different
     occupations"""
     if idet==jdet:
         return 0
@@ -47,11 +47,11 @@ def n_excit(idet,jdet):
 
 def n_excit_spin(idet,jdet,spin):
     """get the hamming weight of a bitwise xor on two determinants.
-    This will show how the number of orbitals in which they have different 
+    This will show how the number of orbitals in which they have different
     occupations"""
     if idet[spin]==jdet[spin]:
         return 0
-    return (bin(int(idet[spin],2)^int(jdet[spin],2)).count('1'))/2 
+    return (bin(int(idet[spin],2)^int(jdet[spin],2)).count('1'))/2
 
 #get hamming weight
 #technically, this is the number of nonzero bits in a binary int, but we might be using strings
@@ -72,7 +72,7 @@ def occ2bitstr(occlist,norb,index=0):
 
 
 def gen_dets(norb,na,nb):
-    """generate all determinants with a given number of spatial orbitals 
+    """generate all determinants with a given number of spatial orbitals
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
     adets=[]
@@ -99,8 +99,8 @@ def gen_dets(norb,na,nb):
     return [(i,j) for i in adets for j in bdets]
 
 def d_a_b_occ(idet):
-    """given idet as a 2-tuple of alpha,beta bitstrings, 
-    return 3-tuple of lists of indices of 
+    """given idet as a 2-tuple of alpha,beta bitstrings,
+    return 3-tuple of lists of indices of
     doubly-occupied, singly-occupied (alpha), singly-occupied (beta) orbitals"""
     docc = []
     aocc = []
@@ -120,8 +120,8 @@ def d_a_b_occ(idet):
     return (docc,aocc,bocc)
 
 def a_b_occ(idet):
-    """given idet as a 2-tuple of alpha,beta bitstrings, 
-    return 2-tuple of lists of indices of 
+    """given idet as a 2-tuple of alpha,beta bitstrings,
+    return 2-tuple of lists of indices of
     occupied alpha and beta orbitals"""
     aocc = []
     bocc = []
@@ -163,13 +163,13 @@ def holes_parts_sign_double(idet,jdet,spin):
             parts.append(i)
     h1,h2 = holes
     p1,p2 = parts
-    
+
     sign1 = getsign(holeint,partint,h1,p1)
     sign2 = getsign(holeint,partint,h2,p2)
     return (h1,h2,p1,p2,sign1*sign2)
 
 def getsign(holeint,partint,h,p,debug=False):
-    
+
     #determine which index comes first (hole or particle) for each pair
     if h < p:
         stri = holeint[h:p]
@@ -192,7 +192,7 @@ def getsign(holeint,partint,h,p,debug=False):
 
 def hole_part_sign_spin_double(idet,jdet):
     #if the two excitations are of different spin, just do them individually
-    x0 = n_excit_spin(idet,jdet,0) 
+    x0 = n_excit_spin(idet,jdet,0)
     if x0==1:
         samespin=False
         hole1,part1,sign1 = hole_part_sign_single(idet,jdet,0)
@@ -209,7 +209,7 @@ def hole_part_sign_spin_double(idet,jdet):
     return (hole1,hole2,part1,part2,sign,samespin)
 
 def d_a_b_1hole(idet,hole,spin):
-    #get doubly/singly occ orbs in the first det            
+    #get doubly/singly occ orbs in the first det
     docc,aocc,bocc = d_a_b_occ(idet)
 
     #account for the excitation to obtain only the orbs that are occupied in both dets
@@ -235,8 +235,8 @@ def d_a_b_single(idet,jdet):
     hole,part,sign = hole_part_sign_single(idet,jdet,spin)
     docc,aocc,bocc = d_a_b_1hole(idet,hole,spin)
     return (hole,part,sign,spin,docc,aocc,bocc)
-        
-# Hii in spinorbs: 
+
+# Hii in spinorbs:
 # sum_i^{occ} <i|hcore|i> + 1/2 sum_{i,j}^{occ} (ii|jj) - (ij|ji)
 
 # Hii in spatial orbs:
@@ -276,7 +276,10 @@ def calc_hii(idet,hcore,eri):
     for ai in aocc:
         for bj in bocc:
             hii += 0.5 * eri[idx4(ai,ai,bj,bj)]
-    return hii
+    if (hii>threshold):
+        return hii
+    else:
+        return 0
 # Hij(a->r) in spinorbs:
 # <r|hcore|i> + sum_j^{occ(both)} (ri|jj) - (rj|ji)
 # multiply by appropriate sign
@@ -294,7 +297,10 @@ def calc_hij_single(idet,jdet,hcore,eri):
     for si in (bocc,aocc)[spin]:
         hij += eri[idx4(part,hole,si,si)]
     hij *= sign
-    return hij
+    if (hij>threshold):
+        return hij
+    else:
+        return 0
 
 def calc_hij_double(idet,jdet,hcore,eri):
     hij=0.0
@@ -303,7 +309,10 @@ def calc_hij_double(idet,jdet,hcore,eri):
     if samespin:
         hij -= eri[idx4(p1,h2,p2,h1)]
     hij *= sign
-    return hij
+    if (hij>threshold):
+        return hij
+    else:
+        return 0
 
 mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
@@ -343,6 +352,7 @@ h1e = reduce(np.dot, (c.T, myhf.get_hcore(), c))
 eri = ao2mo.kernel(mol, c)
 cdets = 25
 tdets = 50
+threshold = 1e-13 #threshold for hii and hij
 #use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
 
 #make full 4-index eris in MO basis (only for testing idx2)
@@ -371,7 +381,7 @@ H_target = np.array((tdets,tdets))
 #generate all determinants
 
 
-fulldetlist=gen_dets(nao,Na,Nb) 
+fulldetlist=gen_dets(nao,Na,Nb)
 ndets=len(fulldetlist)
 #start with HF determinant
 original_detdict = {fulldetlist[0]:1.0}
@@ -414,9 +424,9 @@ for i,j in zip(eig_vals_sorted, eig_vals_gamess):
 
 print("pyci matrix elements vs GAMESS matrix elements")
 print("hii(2222200) = ",fullham[0,0] + mol.energy_nuc())
-print("GAMESS energy = -74.9420799538 ") 
+print("GAMESS energy = -74.9420799538 ")
 print("hii(2222020) = ",fullham[22,22] + mol.energy_nuc())
-print("GAMESS energy = -73.9922866074 ") 
+print("GAMESS energy = -73.9922866074 ")
 
 badlist=[]
 goodlist=[]
