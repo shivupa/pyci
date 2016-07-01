@@ -354,8 +354,8 @@ def amplitude(det,excitation):
 # INITIALIZE
 #############
 myhf = scf.RHF(mol)
-cisolver = fci.FCI(mol, myhf.mo_coeff)
-print('PYSCF: E(HF) = %.12f, E(FCI) = %.12f' % (E,(cisolver.kernel()[0] + mol.energy_nuc())))
+#cisolver = fci.FCI(mol, myhf.mo_coeff)
+#print('PYSCF: E(HF) = %.12f, E(FCI) = %.12f' % (E,(cisolver.kernel()[0] + mol.energy_nuc())))
 E = myhf.kernel()
 c = myhf.mo_coeff
 h1e = reduce(np.dot, (c.T, myhf.get_hcore(), c))
@@ -442,7 +442,7 @@ print("GAMESS energy = -73.9922866074 ")
 
 badlist=[]
 goodlist=[]
-with open("./h2o-ref/ham-2","r") as f:
+with open("./h2o-ref/ham-0","r") as f:
     for line in f:
         numbers_str = line.split()
 #        print(numbers_str)
@@ -458,7 +458,9 @@ with open("./h2o-ref/ham-2","r") as f:
         nexc=n_excit(det1,det2)
         nexca=n_excit_spin(det1,det2,0)
         nexcb=n_excit_spin(det1,det2,1)
-        if nexc==1:
+        if nexc==0:
+            hij=calc_hii(det1,h1e,eri)
+        elif nexc==1:
             hij=calc_hij_single(det1,det2,h1e,eri)
         elif nexc==2:
             hij=calc_hij_double(det1,det2,h1e,eri)
@@ -473,8 +475,8 @@ bad2=[i for i in badlist if i[2]==2]
 
 goodzero=[i for i in goodlist if i[5]==0.0]
 goodfinite=[i for i in goodlist if i[5]!=0.0]
-badsign=[i for i in badlist if abs(i[5]+i[6])<0.00000001]
-badabsval=[i for i in badlist if abs(i[5]+i[6])>=0.00000001]
+badsign=[i for i in badlist if abs(i[5]+i[6])<0.0000001]
+badabsval=[i for i in badlist if abs(i[5]+i[6])>=0.0000001]
 
 
 #############
