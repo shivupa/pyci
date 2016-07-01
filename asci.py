@@ -449,6 +449,10 @@ good2=[i for i in goodlist if i[2]==2]
 bad1=[i for i in badlist if i[2]==1]
 bad2=[i for i in badlist if i[2]==2]
 
+goodzero=[i for i in goodlist if i[5]==0.0]
+goodfinite=[i for i in goodlist if i[5]!=0.0]
+badsign=[i for i in badlist if abs(i[5]+i[6])<0.00000001]
+badabsval=[i for i in badlist if abs(i[5]+i[6])>=0.00000001]
 
 
 #############
