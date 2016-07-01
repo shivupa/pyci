@@ -435,7 +435,7 @@ print("GAMESS energy = -73.9922866074 ")
 
 badlist=[]
 goodlist=[]
-with open("./h2o-ref/h2o-fci-ints-sorted-ji","r") as f:
+with open("./h2o-ref/ham-2","r") as f:
     for line in f:
         numbers_str = line.split()
 #        print(numbers_str)
