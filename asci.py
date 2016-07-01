@@ -453,7 +453,7 @@ goodlist=[]
 #ham-2: 1942 ok nonzero
 #ham-2: 9544 ok zero
 #ham-2: 1744 with wrong sign
-with open("./h2o-ref/ham-2","r") as f:
+with open("./h2o-ref/ham-1","r") as f:
     for line in f:
         numbers_str = line.split()
 #        print(numbers_str)
