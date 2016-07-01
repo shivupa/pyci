@@ -163,7 +163,12 @@ def holes_parts_sign_double(idet,jdet,spin):
             parts.append(i)
     h1,h2 = holes
     p1,p2 = parts
-
+    ###DEBUG DEBUG DEBUG
+    if(h1>h2):
+        print("DEBUG: h1>h2")
+    if(p1>p2):
+        print("DEBUG: p1>p2")
+    ####################
     sign1 = getsign(holeint,partint,h1,p1)
     sign2 = getsign(holeint,partint,h2,p2)
     return (h1,h2,p1,p2,sign1*sign2)
