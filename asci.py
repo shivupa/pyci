@@ -281,10 +281,11 @@ def calc_hii(idet,hcore,eri):
     for ai in aocc:
         for bj in bocc:
             hii += 0.5 * eri[idx4(ai,ai,bj,bj)]
-    if (hii>threshold):
-        return hii
-    else:
-        return 0
+#    if (abs(hii)>threshold):
+#        return hii
+#    else:
+#        return 0.0
+    return hii
 # Hij(a->r) in spinorbs:
 # <r|hcore|i> + sum_j^{occ(both)} (ri|jj) - (rj|ji)
 # multiply by appropriate sign
@@ -302,10 +303,11 @@ def calc_hij_single(idet,jdet,hcore,eri):
     for si in (bocc,aocc)[spin]:
         hij += eri[idx4(part,hole,si,si)]
     hij *= sign
-    if (hij>threshold):
-        return hij
-    else:
-        return 0
+#    if (abs(hij)>threshold):
+#        return hij
+#    else:
+#        return 0.0
+    return hij
 
 def calc_hij_double(idet,jdet,hcore,eri):
     hij=0.0
@@ -314,10 +316,11 @@ def calc_hij_double(idet,jdet,hcore,eri):
     if samespin:
         hij -= eri[idx4(p1,h2,p2,h1)]
     hij *= sign
-    if (hij>threshold):
-        return hij
-    else:
-        return 0
+#    if (abs(hij)>threshold):
+#        return hij
+#    else:
+#        return 0.0
+    return hij
 
 mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
@@ -400,9 +403,10 @@ hval=[]
 for i in range(ndets):
     idet=fulldetlist[i]
     hii = calc_hii(idet,h1e,eri)
-    hrow.append(i)
-    hcol.append(i)
-    hval.append(hii)
+    if abs(hii)>threshold: #we probably don't need this
+        hrow.append(i)
+        hcol.append(i)
+        hval.append(hii)
     for j in range(i+1,ndets):
         jdet=fulldetlist[j]
         nexc_ij = n_excit(idet,jdet)
@@ -411,12 +415,13 @@ for i in range(ndets):
                 hij = calc_hij_single(idet,jdet,h1e,eri)
             else:
                 hij = calc_hij_double(idet,jdet,h1e,eri)
-            hrow.append(i)
-            hrow.append(j)
-            hcol.append(j)
-            hcol.append(i)
-            hval.append(hij)
-            hval.append(hij)
+            if abs(hij)>threshold:
+                hrow.append(i)
+                hrow.append(j)
+                hcol.append(j)
+                hcol.append(i)
+                hval.append(hij)
+                hval.append(hij)
 fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 print(len(fulldetlist))
 eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=10)
