@@ -111,16 +111,23 @@ def d_a_b_occ(idet):
             bocc.append(i)
     return (docc,aocc,bocc)
 
-def hole_part_sign_single(idet,jdet,spin):
+def hole_part_sign_single(idet,jdet,spin,debug=False):
     holeint,partint = map(bitstr2intlist,(idet[spin],jdet[spin]))
-
+    if debug:
+        print(holeint,partint)
     for i, (h, p) in enumerate(zip(holeint,partint)):
         #if only i is occupied, this is the particle orbital
+        if debug:
+            print(i,h,p)
         if h & ~p:
             hole=i
+            if debug:
+                print("hole = ",i)
         elif p & ~h:
             part=i
-    sign = getsign(holeint,partint,h,p)
+            if debug:
+                print("part = ",i)
+    sign = getsign(holeint,partint,hole,part)
     return (hole,part,sign)
 
 def holes_parts_sign_double(idet,jdet,spin):
@@ -364,7 +371,6 @@ for i in range(ndets):
             if nexc_ij==1:
                 hij = calc_hij_single(idet,jdet,h1e,eri)
             else:
-            #    hij=2.0
                 hij = calc_hij_double(idet,jdet,h1e,eri)
             hrow.append(i)
             hrow.append(j)
