@@ -351,6 +351,8 @@ def amplitude(det,excitation):
 # INITIALIZE
 #############
 myhf = scf.RHF(mol)
+cisolver = fci.FCI(mol, myhf.mo_coeff)
+print('PYSCF: E(HF) = %.12f, E(FCI) = %.12f' % (E,(cisolver.kernel()[0] + mol.energy_nuc())))
 E = myhf.kernel()
 c = myhf.mo_coeff
 h1e = reduce(np.dot, (c.T, myhf.get_hcore(), c))
