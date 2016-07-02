@@ -1,0 +1,20 @@
+
+decisions to make (and general observations):
+  how to represent determinants:
+    one object or two (i.e. in terms of spinorbitals or in terms of separate alpha/beta spatial orbitals)
+      for restricted references, almost certainly easier to use separate alpha/beta objects
+      i haven't given much thought to unrestricted references and how one would store integrals (the naive way of storing eris would have lots of zeros due to spin asymmetry; maybe one array with alpha eris, one array with beta eris, and one with mixed?; in this case, separate alpha/beta objects would probably make sense.  we could also try to do clever things with storage and access of eris so that we wouldn't have to exploit symmetry in how the array is structured, only in how the elements are accessed.)
+      The most compact way to store eris would be as a 1D array (or several 1D arrays), so we would make some lookup table/function to easily access them using 4-index notation.  This lookup could also incorporate spin symmetry here, so even in the restricted case, we could just naively loop over spinorbitals and let the lookup function handle everything. This is in contrast to the original (attempted) implementation for a restricted reference, which separately looped over doubly occupied, singly-occupied(alpha), and singly-occupied(beta) orbitals.
+      
+    strings, ints, or lists(or tuples or dicts):
+      it might make sense to convert between binary-type representations (e.g. "111101100" or the equivalent integer (492)) and lists of occupied orbitals (e.g. [0,1,2,3,5,6] for the given binary-type example)
+      sums over occupied orbitals might be easier with lists of occupied orbitals than with binary-type representations
+      finding differences between determinants would be easy with bitwise binary operations:
+        det1 XOR det2 gives all orbitals where the two dets differ
+        det1 AND NOT det2 gives binary-type representation of particles (or holes, depending on how det1, det2 are defined)
+      actual strings would use much more memory than is actually necessary
+      in python, an easy (but not necessarily efficient) way to work with ints this way is to convert to/from strings
+        bin(492) returns '0b111101100' (a string)
+        int('111101100',2) and int('0b111101100',2) both return 492 (an int)
+      if python could iterate over the bits in the binary representation of an integer (without first converting it to a string or a list), this would probably be the best choice, but we'd need to be smart about leading zeros (or iterate in reverse order)
+      if we exclusively use dictionaries/sets (of occupied orbitals), we could probably use set operations to do everything we need to do. (if we want to use these sets as dictionary keys, we'll have to use frozensets (dictionary keys need to be immutable))
