@@ -32,10 +32,12 @@ def idx2(i,j):
 def idx4(i,j,k,l):
     """idx4(i,j,k,l) returns 2-tuple corresponding to (ij|kl) in
     square eri array (size n*(n-1)/2 square) (4-fold symmetry?)"""
-#    if (i,j,k,l) in __idx4_cache:
+    #    if (i,j,k,l) in __idx4_cache:
     return (idx2(i,j),idx2(k,l))
 
 #determine degree of excitation between two dets (as strings of {0,1})
+#can be reformulated with sets. will be easier
+
 def n_excit(idet,jdet):
     """get the hamming weight of a bitwise xor on two determinants.
     This will show how the number of orbitals in which they have different
@@ -55,22 +57,23 @@ def n_excit_spin(idet,jdet,spin):
     return (bin(int(idet[spin],2)^int(jdet[spin],2)).count('1'))/2
 
 #get hamming weight
-#technically, this is the number of nonzero bits in a binary int, but we might be using strings
+#technically, this is the number of nonzero bits in a binary int, but we might be using strings\
+#long slow down if we call this in n_excit_spin weird
 def hamweight(strdet):
     return strdet.count('1')
 
 def bitstr2intlist(detstr):
     """turn a string into a list of ints
     input of "1100110" will return [1,1,0,0,1,1,0]"""
-    return list(map(int,list(detstr)))
+    return map(int,list(detstr))
 
 def occ2bitstr(occlist,norb,index=0):
+    """turn a list of ints of indices of occupied orbitals
+    and total number of orbitals into a bit string """
     bitlist=["0" for i in range(norb)]
     for i in occlist:
         bitlist[i-index]="1"
     return ''.join(bitlist)
-
-
 
 def gen_dets(norb,na,nb):
     """generate all determinants with a given number of spatial orbitals
@@ -106,7 +109,7 @@ def d_a_b_occ(idet):
     docc = []
     aocc = []
     bocc = []
-#make two lists of ints so we can use binary logical operators on them
+    #make two lists of ints so we can use binary logical operators on them
     aint,bint = map(bitstr2intlist,idet)
     for i, (a, b) in enumerate(zip(aint,bint)):
         if a & b:
@@ -200,9 +203,6 @@ def getsign(holeint,partint,h,p,debug=False):
                 print ("signchange")
             sign *= -1
     return sign
-
-
-
 
 def hole_part_sign_spin_double(idet,jdet):
     #if the two excitations are of different spin, just do them individually
