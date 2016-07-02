@@ -9,6 +9,7 @@ import h5py
 from pyscf import gto, scf, ao2mo, fci
 import pyscf.tools as pt
 import copy
+import matplotlib.pyplot as plt
 #############
 # INPUT
 #############
@@ -248,7 +249,24 @@ def d_a_b_single(idet,jdet):
     hole,part,sign = hole_part_sign_single(idet,jdet,spin)
     docc,aocc,bocc = d_a_b_1hole(idet,hole,spin)
     return (hole,part,sign,spin,docc,aocc,bocc)
-
+#############Shit visualization function
+def hamiltonian_heatmap(h):
+    h = h.toarray()
+    h -= np.min(h)
+    h /= np.max(h)
+    fig = plt.figure(facecolor='white',figsize=(10,10))
+    ax = fig.add_subplot(111)
+    plt.rc('font', family='serif',size = 24)
+    plt.imshow(h, cmap='bone', interpolation='nearest')
+    for axis in ['top','bottom','left','right']:
+    	ax.spines[axis].set_linewidth(1.5)
+    ax.xaxis.set_tick_params(pad=7,width=1.5)#,length=10)
+    ax.yaxis.set_tick_params(pad = 7,width=1.5)#,length=10)
+    plt.title(r'Full Hamiltonian')
+    fig.tight_layout()
+    fig.savefig('ham.svg')
+    #plt.show()
+############################
 # Hii in spinorbs:
 # sum_i^{occ} <i|hcore|i> + 1/2 sum_{i,j}^{occ} (ii|jj) - (ij|ji)
 
@@ -431,6 +449,7 @@ for i in range(ndets):
                 hval.append(hij)
                 hval.append(hij)
 fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
+hamiltonian_heatmap(fullham);
 print(len(fulldetlist))
 eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=10)
 eig_vals_sorted = sorted(eig_vals)[:4] + mol.energy_nuc()
