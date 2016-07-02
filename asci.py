@@ -442,11 +442,11 @@ print("pyci eigvals vs GAMESS eigvals")
 for i,j in zip(eig_vals_sorted, eig_vals_gamess):
     print(i,j)
 
-print("pyci matrix elements vs GAMESS matrix elements")
-print("hii(2222200) = ",fullham[0,0] + mol.energy_nuc())
-print("GAMESS energy = -74.9420799538 ")
-print("hii(2222020) = ",fullham[22,22] + mol.energy_nuc())
-print("GAMESS energy = -73.9922866074 ")
+#print("pyci matrix elements vs GAMESS matrix elements")
+#print("hii(2222200) = ",fullham[0,0] + mol.energy_nuc())
+#print("GAMESS energy = -74.9420799538 ")
+#print("hii(2222020) = ",fullham[22,22] + mol.energy_nuc())
+#print("GAMESS energy = -73.9922866074 ")
 
 badlist=[]
 goodlist=[]
