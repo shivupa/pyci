@@ -65,7 +65,7 @@ def hamweight(strdet):
 def bitstr2intlist(detstr):
     """turn a string into a list of ints
     input of "1100110" will return [1,1,0,0,1,1,0]"""
-    return map(int,list(detstr))
+    return list(map(int,list(detstr)))
 
 def occ2bitstr(occlist,norb,index=0):
     """turn a list of ints of indices of occupied orbitals
@@ -75,7 +75,7 @@ def occ2bitstr(occlist,norb,index=0):
         bitlist[i-index]="1"
     return ''.join(bitlist)
 
-def gen_dets(norb,na,nb):
+def gen_dets(norb,na,nb,debug=False):
     """generate all determinants with a given number of spatial orbitals
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
@@ -83,6 +83,8 @@ def gen_dets(norb,na,nb):
     #loop over all subsets of size na from the list of orbitals
     for alist in itertools.combinations(range(norb),na):
         #start will all orbs unoccupied
+        if debug:
+            print(alist)
         idet=["0" for i in range(norb)]
         for orb in alist:
             #for each occupied orbital (index), replace the "0" with a "1"
