@@ -48,6 +48,13 @@ def n_excit(idet,jdet):
     bexc = n_excit_spin(idet,jdet,1)
     return aexc+bexc
 
+def n_excit_sets(idet,jdet):
+    if idet==jdet:
+        return 0
+    aexc = n_excit_spin_sets(idet,jdet,0)
+    bexc = n_excit_spin_sets(idet,jdet,1)
+    return aexc+bexc
+
 def n_excit_spin(idet,jdet,spin):
     """get the hamming weight of a bitwise xor on two determinants.
     This will show how the number of orbitals in which they have different
@@ -55,6 +62,11 @@ def n_excit_spin(idet,jdet,spin):
     if idet[spin]==jdet[spin]:
         return 0
     return (bin(int(idet[spin],2)^int(jdet[spin],2)).count('1'))/2
+
+def n_excit_spin_sets(idet,jdet,spin):
+    if idet[spin]==jdet[spin]:
+        return 0
+    return len(idet[spin]-jdet[spin])
 
 #get hamming weight
 #technically, this is the number of nonzero bits in a binary int, but we might be using strings\
@@ -177,6 +189,15 @@ def hole_part_sign_single(idet,jdet,spin,debug=False):
     sign = getsign(holeint,partint,hole,part)
     return (hole,part,sign)
 
+def hole_part_sign_single_sets(idet,jdet,spin,debug=False):
+    holeset,partset = (idet[spin],jdet[spin])
+    if debug:
+        print(holeset,partset)
+    hole,=(holeset-partset)
+    part,=(partset-holeset)
+    sign = getsign_sets(holeset,hole,part)
+    return (hole,part,sign)
+
 def signstr(s1,s2,h1,p1):
     holeint,partint = map(bitstr2intlist,(s1,s2))
     print(holeint)
@@ -204,6 +225,19 @@ def holes_parts_sign_double(idet,jdet,spin):
     sign2 = getsign(holeint,partint,h2,p2)
     return (h1,h2,p1,p2,sign1*sign2)
 
+def holes_parts_sign_double_sets(idet,jdet,spin):
+    holeset,partset = (idet[spin],jdet[spin])
+    holes=set(holeset-partset)
+    parts=set(partset-holeset)
+    h1 = holes.pop()
+    h2 = holes.pop()
+    p1 = parts.pop()
+    p2 = parts.pop()
+    sign1 = getsign_sets(holeset,h1,p1)
+    sign2 = getsign_sets(partset,h2,p2)
+    sign = sign1*sign2
+    return (h1,h2,p1,p2,sign)
+
 def getsign(holeint,partint,h,p,debug=False):
 
     #determine which index comes first (hole or particle) for each pair
@@ -225,6 +259,17 @@ def getsign(holeint,partint,h,p,debug=False):
             sign *= -1
     return sign
 
+def getsign_sets(holeset,h,p,debug=False):
+
+    #determine which index comes first (hole or particle) for each pair
+
+    if h < p:
+        num = [i for i in holeset if i<p and i>h]
+    else:
+        num = [i for i in holeset if i<h and i>p]
+    sign=(-1)**len(num)
+    return sign
+
 def hole_part_sign_spin_double(idet,jdet):
     #if the two excitations are of different spin, just do them individually
     x0 = n_excit_spin(idet,jdet,0)
@@ -241,6 +286,24 @@ def hole_part_sign_spin_double(idet,jdet):
             spin = 0
         #TODO get holes, particles, and sign
         hole1,hole2,part1,part2,sign = holes_parts_sign_double(idet,jdet,spin)
+    return (hole1,hole2,part1,part2,sign,samespin)
+
+def hole_part_sign_spin_double_sets(idet,jdet):
+    #if the two excitations are of different spin, just do them individually
+    x0 = n_excit_spin_sets(idet,jdet,0)
+    if x0==1:
+        samespin=False
+        hole1,part1,sign1 = hole_part_sign_single_sets(idet,jdet,0)
+        hole2,part2,sign2 = hole_part_sign_single_sets(idet,jdet,1)
+        sign = sign1 * sign2
+    else:
+        samespin=True
+        if x0==0:
+            spin = 1
+        else:
+            spin = 0
+        #TODO get holes, particles, and sign
+        hole1,hole2,part1,part2,sign = holes_parts_sign_double_sets(idet,jdet,spin)
     return (hole1,hole2,part1,part2,sign,samespin)
 
 def d_a_b_1hole(idet,hole,spin):
@@ -260,6 +323,12 @@ def d_a_b_1hole(idet,hole,spin):
         bocc = sorted(list(set(bocc)-{hole}))
     return (docc,aocc,bocc)
 
+def a_b_1hole_sets(idet,hole,spin):
+    if spin==0:
+        return (idet[0]-{hole},idet[1])
+    else:
+        return (idet[0],idet[1]-{hole})
+
 def d_a_b_single(idet,jdet):
     #if alpha strings are the same for both dets, the difference is in the beta part
     #alpha is element 0, beta is element 1
@@ -270,6 +339,18 @@ def d_a_b_single(idet,jdet):
     hole,part,sign = hole_part_sign_single(idet,jdet,spin)
     docc,aocc,bocc = d_a_b_1hole(idet,hole,spin)
     return (hole,part,sign,spin,docc,aocc,bocc)
+
+def a_b_single_sets(idet,jdet):
+    #if alpha strings are the same for both dets, the difference is in the beta part
+    #alpha is element 0, beta is element 1
+    if idet[0]==jdet[0]:
+        spin=1
+    else:
+        spin=0
+    hole,part,sign = hole_part_sign_single_sets(idet,jdet,spin)
+    aocc,bocc = a_b_1hole_sets(idet,hole,spin)
+    return (hole,part,sign,spin,aocc,bocc)
+
 #############Shit visualization function
 def hamiltonian_heatmap(h):
     h = h.toarray()
@@ -369,6 +450,57 @@ def calc_hij_double(idet,jdet,hcore,eri):
 #        return 0.0
     return hij
 
+def calc_hii_sets(idet,hcore,eri):
+    hii=0.0
+    aocc,bocc = idet
+    for ia in aocc:
+        hii += hcore[ia,ia]
+    for ib in bocc:
+        hii += hcore[ib,ib]
+    for ia in aocc:
+        for ja in aocc:
+            hii += 0.5* (eri[idx4(ia,ia,ja,ja)]-eri[idx4(ia,ja,ja,ia)])
+    for ib in bocc:
+        for jb in bocc:
+            hii += 0.5* (eri[idx4(ib,ib,jb,jb)]-eri[idx4(ib,jb,jb,ib)])
+    for ia in aocc:
+        for jb in bocc:
+            hii += eri[idx4(ia,ia,jb,jb)]
+#    if (abs(hii)>threshold):
+#        return hii
+#    else:
+#        return 0.0
+    return hii
+
+def calc_hij_single_sets(idet,jdet,hcore,eri):
+    hij=0.0
+    hole,part,sign,spin,aocc,bocc = a_b_single_sets(idet,jdet)
+    hij += hcore[part,hole]
+    for si in (aocc,bocc)[spin]:
+        hij += eri[idx4(part,hole,si,si)]
+        hij -= eri[idx4(part,si,si,hole)]
+    for si in (bocc,aocc)[spin]:
+        hij += eri[idx4(part,hole,si,si)]
+    hij *= sign
+#    if (abs(hij)>threshold):
+#        return hij
+#    else:
+#        return 0.0
+    return hij
+
+def calc_hij_double_sets(idet,jdet,hcore,eri):
+    hij=0.0
+    h1,h2,p1,p2,sign,samespin = hole_part_sign_spin_double_sets(idet,jdet)
+    hij += eri[idx4(p1,h1,p2,h2)]
+    if samespin:
+        hij -= eri[idx4(p1,h2,p2,h1)]
+    hij *= sign
+#    if (abs(hij)>threshold):
+#        return hij
+#    else:
+#        return 0.0
+    return hij
+
 mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
             ['H', (1.638036840407,   1.136548822547,  -0.000000000000)],
@@ -438,30 +570,30 @@ H_target = np.array((tdets,tdets))
 #generate all determinants
 
 
-fulldetlist=gen_dets(nao,Na,Nb)
-ndets=len(fulldetlist)
+fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
+ndets=len(fulldetlist_sets)
 #start with HF determinant
-original_detdict = {fulldetlist[0]:1.0}
+original_detdict = {fulldetlist_sets[0]:1.0}
 #lists for csr sparse storage of hamiltonian
 #if this is just for storage (and not diagonalization) then we can use a dict instead (or store as upper half of sparse matrix)
 hrow=[]
 hcol=[]
 hval=[]
 for i in range(ndets):
-    idet=fulldetlist[i]
-    hii = calc_hii(idet,h1e,eri)
+    idet=fulldetlist_sets[i]
+    hii = calc_hii_sets(idet,h1e,eri)
     if abs(hii)>threshold: #we probably don't need this
         hrow.append(i)
         hcol.append(i)
         hval.append(hii)
     for j in range(i+1,ndets):
-        jdet=fulldetlist[j]
-        nexc_ij = n_excit(idet,jdet)
+        jdet=fulldetlist_sets[j]
+        nexc_ij = n_excit_sets(idet,jdet)
         if nexc_ij in (1,2):
             if nexc_ij==1:
-                hij = calc_hij_single(idet,jdet,h1e,eri)
+                hij = calc_hij_single_sets(idet,jdet,h1e,eri)
             else:
-                hij = calc_hij_double(idet,jdet,h1e,eri)
+                hij = calc_hij_double_sets(idet,jdet,h1e,eri)
             if abs(hij)>threshold:
                 hrow.append(i)
                 hrow.append(j)
@@ -471,7 +603,7 @@ for i in range(ndets):
                 hval.append(hij)
 fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 hamiltonian_heatmap(fullham);
-print(len(fulldetlist))
+print(len(fulldetlist_sets))
 eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=10)
 eig_vals_sorted = sorted(eig_vals)[:4] + mol.energy_nuc()
 eig_vals_gamess = [-75.0129802245,
