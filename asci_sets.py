@@ -535,6 +535,9 @@ def amplitude(det,excitation):
 myhf = scf.RHF(mol)
 E = myhf.kernel()
 c = myhf.mo_coeff
+#if you change the sign of these two orbitals, the hamiltonian matrix elements agree with those from GAMESS
+#c.T[2]*=-1
+#c.T[5]*=-1
 cisolver = fci.FCI(mol, c)
 print('PYSCF  E(FCI) = %.12f' % (cisolver.kernel()[0] + mol.energy_nuc()))
 h1e = reduce(np.dot, (c.T, myhf.get_hcore(), c))
@@ -602,7 +605,7 @@ for i in range(ndets):
                 hval.append(hij)
                 hval.append(hij)
 fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
-hamiltonian_heatmap(fullham);
+#hamiltonian_heatmap(fullham);
 print(len(fulldetlist_sets))
 eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=10)
 eig_vals_sorted = sorted(eig_vals)[:4] + mol.energy_nuc()
@@ -633,28 +636,28 @@ goodlist=[]
 #ham-2: 1942 ok nonzero
 #ham-2: 9544 ok zero
 #ham-2: 1744 with wrong sign
-with open("./h2o-ref/ham-1","r") as f:
+with open("./h2o-ref/ham-2","r") as f:
     for line in f:
         numbers_str = line.split()
 #        print(numbers_str)
-        a1occ=occ2bitstr(map(int,numbers_str[0:5]),7,1)
-        b1occ=occ2bitstr(map(int,numbers_str[5:10]),7,1)
-        a2occ=occ2bitstr(map(int,numbers_str[10:15]),7,1)
-        b2occ=occ2bitstr(map(int,numbers_str[15:20]),7,1)
+        a1occ=frozenset({int(i)-1 for i in numbers_str[0:5]})
+        b1occ=frozenset({int(i)-1 for i in numbers_str[5:10]})
+        a2occ=frozenset({int(i)-1 for i in numbers_str[10:15]})
+        b2occ=frozenset({int(i)-1 for i in numbers_str[15:20]})
 #        print(a1occ,b1occ,a2occ,b2occ)
         val=float(numbers_str[20])
         det1=(a1occ,b1occ)
         det2=(a2occ,b2occ)
         hij=55.0
-        nexc=n_excit(det1,det2)
-        nexca=n_excit_spin(det1,det2,0)
-        nexcb=n_excit_spin(det1,det2,1)
+        nexc=n_excit_sets(det1,det2)
+        nexca=n_excit_spin_sets(det1,det2,0)
+        nexcb=n_excit_spin_sets(det1,det2,1)
         if nexc==0:
-            hij=calc_hii(det1,h1e,eri)
+            hij=calc_hii_sets(det1,h1e,eri)
         elif nexc==1:
-            hij=calc_hij_single(det1,det2,h1e,eri)
+            hij=calc_hij_single_sets(det1,det2,h1e,eri)
         elif nexc==2:
-            hij=calc_hij_double(det1,det2,h1e,eri)
+            hij=calc_hij_double_sets(det1,det2,h1e,eri)
         if abs(val-hij) > 0.0000001:
             badlist.append((det1,det2,nexc,nexca,nexcb,val,hij))
         else:
@@ -668,8 +671,12 @@ goodzero=[i for i in goodlist if i[5]==0.0]
 goodfinite=[i for i in goodlist if i[5]!=0.0]
 badsign=[i for i in badlist if abs(i[5]+i[6])<0.0000001]
 badabsval=[i for i in badlist if abs(i[5]+i[6])>=0.0000001]
-
-
+badsignholepart=[(
+    (list(i[0][0]-i[1][0]),list(i[1][0]-i[0][0]),list(i[0][0] & i[1][0])),
+    (list(i[0][1]-i[1][1]),list(i[1][1]-i[0][1]),list(i[0][1] & i[1][1])),
+    i[2],i[3],i[4],i[5],i[6]) for i in badsign]
+print("badsign: ",len(badsign))
+print("badlist: ",len(badlist))
 #############
 # MAIN LOOP
 #############
