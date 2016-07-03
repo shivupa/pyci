@@ -540,6 +540,7 @@ c = myhf.mo_coeff
 #c.T[5]*=-1
 cisolver = fci.FCI(mol, c)
 print('PYSCF  E(FCI) = %.12f' % (cisolver.kernel()[0] + mol.energy_nuc()))
+efci = cisolver.kernel(nroots=15)[0] + mol.energy_nuc()
 h1e = reduce(np.dot, (c.T, myhf.get_hcore(), c))
 eri = ao2mo.kernel(mol, c)
 cdets = 25
@@ -607,14 +608,14 @@ for i in range(ndets):
 fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 #hamiltonian_heatmap(fullham);
 print(len(fulldetlist_sets))
-eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=10)
-eig_vals_sorted = sorted(eig_vals)[:4] + mol.energy_nuc()
+eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=30)
+eig_vals_sorted = sorted(eig_vals)[:15] + mol.energy_nuc()
 eig_vals_gamess = [-75.0129802245,
                    -74.7364625517,
                    -74.6886742417,
                    -74.6531877287]
-print("pyci eigvals vs GAMESS eigvals")
-for i,j in zip(eig_vals_sorted, eig_vals_gamess):
+print("pyci eigvals vs PYSCF eigvals")
+for i,j in zip(eig_vals_sorted, efci):
     print(i,j)
 
 #print("pyci matrix elements vs GAMESS matrix elements")
