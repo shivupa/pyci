@@ -1,3 +1,2 @@
 # pyci
 A Python Configuration Interaction program...
-which doesn't work.
