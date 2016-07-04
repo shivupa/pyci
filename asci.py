@@ -37,7 +37,7 @@ printroots=4
 #############
 # FUNCTIONS
 #############
-def create_PYSCF_fcidump():
+""" TODO: remove this?def create_PYSCF_fcidump():
     myhf = scf.RHF(mol)
     E = myhf.kernel()
     c = myhf.mo_coeff
@@ -46,6 +46,7 @@ def create_PYSCF_fcidump():
     pt.fcidump.from_integrals('fcidump.txt', h1e, eri, c.shape[1],mol.nelectron, ms=0)
     cisolver = fci.FCI(mol, myhf.mo_coeff)
     print('E(HF) = %.12f, E(FCI) = %.12f' % (E,(cisolver.kernel()[0] + mol.energy_nuc())))
+"""
 def amplitude(det,excitation):
     return 0.1
 #############
@@ -126,7 +127,7 @@ for i in range(ndets):
                 hval.append(hij)
 fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 #hamiltonian_heatmap(fullham);
-print(len(fulldetlist_sets))
+#print(len(fulldetlist_sets))
 eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=2*printroots)
 eig_vals_sorted = sorted(eig_vals)[:printroots] + mol.energy_nuc()
 eig_vals_gamess = [-75.0129802245,
@@ -144,7 +145,7 @@ for i,j in zip(eig_vals_sorted, efci):
 temp_detdict = {}
 temp_double_detdict = {}
 new_detdict = copy.deepcopy(original_detdict)
-print(temp_detdict)
+#print(temp_detdict)
 
 for det in original_detdict:
     occ_index = []
@@ -156,8 +157,8 @@ for det in original_detdict:
         else:
             virt_index.append(count)
         count +=1
-    print(occ_index)
-    print(virt_index)
+    #print(occ_index)
+    #print(virt_index)
     for i in occ_index:
         for j in virt_index:
             temp_det = list(det)
@@ -191,10 +192,10 @@ for i in temp_double_detdict:
 #new_detdict.update(original_detdict)
 #print("shiv",len(temp_detdict))
 #print("shiv",len(temp_double_detdict))
-for i in new_detdict:
-    print(i, new_detdict[i])
-print(sorted(new_detdict.items(), key=lambda x: x[1]))
-print(len(new_detdict))
+#for i in new_detdict:
+    #print(i, new_detdict[i])
+#print(sorted(new_detdict.items(), key=lambda x: x[1]))
+#print(len(new_detdict))
 
 #one of these agrees with gamess and one does not
 #print("d_a_b_single(('1111100','1110110'),('1111100','1111100'))")
