@@ -16,6 +16,7 @@ from utils import *
 #############
 #TODO: implement function that finds particles/holes based on set operations (will be easier with aocc,bocc lists of indices instead of docc,aocc(single),bocc(single)
 
+np.set_printoptions(precision=4,suppress=True)
 
 mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
@@ -23,7 +24,8 @@ mol = gto.M(
             ['H', (-1.638036840407,   1.136548822547,  -0.000000000000)]],
     basis = 'STO-3G',
     verbose = 1,
-    unit='b'
+    unit='b',
+    symmetry=True
 )
 Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
 nao=mol.nao_nr()
