@@ -55,10 +55,10 @@ ndets=len(fulldetlist_sets)
 hrow=[]
 hcol=[]
 hval=[]
-cdets = 50
-tdets = 100
+cdets = 100
+tdets = 200
 E_old = 0
-convergence = 1e-6
+convergence = 1e-10
 
 
 targetdetlist_sets = []
@@ -68,6 +68,8 @@ coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
 ndets = np.shape(coredetlist_sets)[0]
 C = np.zeros(ndets)
 C[0] = 1
+print("Hartree-Fock Energy: ", E)
+print("")
 while(np.abs(E - E_old) > convergence):
     print("Core Dets: ",cdets)
     print("Exitation Dets: ",ndets)
