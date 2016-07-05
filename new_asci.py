@@ -50,6 +50,8 @@ num_occ = mol.nelectron
 num_virt = num_orbs - num_occ
 fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
 ndets=len(fulldetlist_sets)
+coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb)
+cdets=len(core_sets)
 #lists for csr sparse storage of hamiltonian
 #if this is just for storage (and not diagonalization) then we can use a dict instead (or store as upper half of sparse matrix)
 hrow=[]
@@ -63,13 +65,13 @@ C = np.zeros(cdets)
 C[0] = 1
 while(E - E_old > convergence):
     for i in range(cdets):
-        idet=fulldetlist_sets[i]
+        idet=coredetlist_sets[i]
         hii = calc_hii_sets(idet,h1e,eri)
         hrow.append(i)
         hcol.append(i)
         hval.append(hii)
-        for j in range(i+1,ndets):
-            jdet=fulldetlist_sets[j]
+        for j in range(i+1,cdets):
+            jdet=coredetlist_sets[j]
             nexc_ij = n_excit_sets(idet,jdet)
             if nexc_ij in (1,2):
                 if nexc_ij==1:
@@ -82,7 +84,7 @@ while(E - E_old > convergence):
                 hcol.append(i)
                 hval.append(hij)
                 hval.append(hij)
-    fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
+    core_ham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
     eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=2*printroots)
     eig_vals_sorted = sorted(eig_vals)[:printroots] + mol.energy_nuc()
 eig_vals_gamess = [-75.0129802245,
