@@ -59,14 +59,18 @@ cdets = 50
 tdets = 100
 E_old = 0
 convergence = 1e-6
-C = np.zeros(cdets)
-C[0] = 1
-A = np.zeros(cdets)
+
+
 targetdetlist_sets = []
 coredetlist_sets = [(frozenset([1,2,3,4]),frozenset([1,2,3,4]))]
 coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
-while(E - E_old > convergence):
-    ndets = np.shape(coredetlist_sets)
+
+ndets = np.shape(coredetlist_sets)[0]
+C = np.zeros(ndets)
+C[0] = 1
+while(np.abs(E - E_old) > convergence):
+
+    print ndets
     #step 0
     for i in range(ndets):
         idet=coredetlist_sets[i]
@@ -90,10 +94,11 @@ while(E - E_old > convergence):
                 hval.append(hij)
     core_ham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
     #step 1
+    A = np.zeros(ndets)
     for i in range(ndets):
         for j in range(i+1,ndets):
-            A[i] += H[i,j]*C[j]
-        A[i] /= coreham[i,i] - E
+            A[i] += core_ham[i,j]*C[j]
+        A[i] /= core_ham[i,i] - E
     #step 2
     targetdetlist_sets = []
     for i in np.argsort(np.abs(A))[::-1][0:tdets]:
@@ -130,11 +135,11 @@ while(E - E_old > convergence):
     for i in np.argsort(np.abs(C))[::-1][0:cdets]:
         coredetlist_sets.append(targetdetlist_sets[i])
     coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
-
+    ndets = np.shape(coredetlist_sets)[0]
 eig_vals_gamess = [-75.0129802245,
                    -74.7364625517,
                    -74.6886742417,
                    -74.6531877287]
 print("first {:} pyci eigvals vs PYSCF eigvals vs GAMESS eigvals".format(printroots))
-for i,j,k in zip(eig_vals_sorted, efci, eig_vals_gamess):
-    print(i,j,k)
+#for i,j,k in zip(eig_vals_sorted, efci, eig_vals_gamess):
+    #print(i,j,k)
