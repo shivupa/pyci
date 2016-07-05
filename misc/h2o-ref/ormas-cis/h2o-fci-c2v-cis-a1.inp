@@ -1,0 +1,20 @@
+ $SYSTEM MWORDS=2000 MEMDDI=1100 $END
+ $BASIS GBASIS=sto ngauss=3 $END
+ $CONTRL SCFTYP=rhf cityp=ormas mult=1
+         ispher=1 maxit=200 units=bohr $END
+ $GUESS  GUESS=hcore $END
+ $scf conv=1.0d-8 dirscf=.t. $end
+ $cidet ncore=0 nact=7 nels=10 group=c2v stsym=a1 nstate=3 $end
+ $ormas nspace=2
+        mstart(1)=1,6
+          mine(1)=9,0
+          maxe(1)=10,1 $end
+
+ $DATA
+h2o sto3g crawford cis
+cnv 2
+
+O  8  0.000  0.000           -0.143225816552 
+H  1  0.000  1.638036840407   1.136548822547
+ $END
+       
