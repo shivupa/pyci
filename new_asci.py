@@ -50,8 +50,6 @@ num_occ = mol.nelectron
 num_virt = num_orbs - num_occ
 fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
 ndets=len(fulldetlist_sets)
-coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb)
-cdets=len(core_sets)
 #lists for csr sparse storage of hamiltonian
 #if this is just for storage (and not diagonalization) then we can use a dict instead (or store as upper half of sparse matrix)
 hrow=[]

@@ -403,7 +403,7 @@ def calc_hij_double_sets(idet,jdet,hcore,eri):
 
 ##############################################ASCI funcs
 #TODO: only generate first and second excitations here
-def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets=None):
+def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets):
     """generate cdets determinants with a given number of spatial orbitals
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
@@ -421,8 +421,6 @@ def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets=None):
         for blist in itertools.combinations(range(norb),nb):
             bdets.append(frozenset(blist))
     #return all pairs of (alpha,beta) strings that are single and double excitations from HF
-    if cdetlist_sets == None:
-        cdetlist_sets = [(frozenset([1,2,3,4]),([1,2,3,4]))]
     return_list = []
     for i in adets:
         for j in bdets:
