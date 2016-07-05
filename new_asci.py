@@ -55,8 +55,8 @@ ndets=len(fulldetlist_sets)
 hrow=[]
 hcol=[]
 hval=[]
-cdets = 100
-tdets = 200
+cdets = 50
+tdets = 100
 E_old = 0
 convergence = 1e-10
 
@@ -75,30 +75,7 @@ while(np.abs(E - E_old) > convergence):
     print("Exitation Dets: ",ndets)
     print("Target Dets: ",tdets)
     #step 0
-    hrow = []
-    hcol = []
-    hval = []
-    for i in range(ndets):
-        idet=coredetlist_sets[i]
-        hii = calc_hii_sets(idet,h1e,eri)
-        hrow.append(i)
-        hcol.append(i)
-        hval.append(hii)
-        for j in range(i+1,ndets):
-            jdet=coredetlist_sets[j]
-            nexc_ij = n_excit_sets(idet,jdet)
-            if nexc_ij in (1,2):
-                if nexc_ij==1:
-                    hij = calc_hij_single_sets(idet,jdet,h1e,eri)
-                else:
-                    hij = calc_hij_double_sets(idet,jdet,h1e,eri)
-                hrow.append(i)
-                hrow.append(j)
-                hcol.append(j)
-                hcol.append(i)
-                hval.append(hij)
-                hval.append(hij)
-    core_ham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
+    core_ham = construct_hamiltonian(ndets,coredetlist_sets,h1e,eri)
     #step 1
     A = np.zeros(tdets)
     for i in range(tdets):
@@ -113,27 +90,7 @@ while(np.abs(E - E_old) > convergence):
     hcol = []
     hval = []
     #step 3
-    for i in range(tdets):
-        idet=targetdetlist_sets[i]
-        hii = calc_hii_sets(idet,h1e,eri)
-        hrow.append(i)
-        hcol.append(i)
-        hval.append(hii)
-        for j in range(i+1,tdets):
-            jdet=targetdetlist_sets[j]
-            nexc_ij = n_excit_sets(idet,jdet)
-            if nexc_ij in (1,2):
-                if nexc_ij==1:
-                    hij = calc_hij_single_sets(idet,jdet,h1e,eri)
-                else:
-                    hij = calc_hij_double_sets(idet,jdet,h1e,eri)
-                hrow.append(i)
-                hrow.append(j)
-                hcol.append(j)
-                hcol.append(i)
-                hval.append(hij)
-                hval.append(hij)
-    target_ham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(tdets,tdets))
+    target_ham=construct_hamiltonian(tdets,targetdetlist_sets,h1e,eri)
     eig_vals,eig_vecs = sp.sparse.linalg.eigsh(target_ham,k=2*printroots)
     eig_vals_sorted = np.sort(eig_vals)[:printroots] + mol.energy_nuc()
     E_old = E
@@ -141,8 +98,10 @@ while(np.abs(E - E_old) > convergence):
     print("Iteration Energy: ", E)
     #step 4
     C = eig_vecs[:,np.argsort(eig_vals)[0]]
+    coredetlist_sets = []
     for i in np.argsort(np.abs(C))[::-1][0:cdets]:
         coredetlist_sets.append(targetdetlist_sets[i])
+    C = C[np.argsort(np.abs(C))[::-1][0:tdets]]
     coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
     ndets = np.shape(coredetlist_sets)[0]
     print("")

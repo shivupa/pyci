@@ -1,5 +1,7 @@
 import itertools
-import matplotlib.pyplot as plt
+import scipy as sp
+import scipy.linalg as spla
+import scipy.sparse.linalg as splinalg
 
 #2-index transformation for accessing eri elements with standard 4 indices
 #TODO: only cache i<j elements?
@@ -408,6 +410,7 @@ def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets):
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
     #TODO(shiv) this should only generate first and second exctiations but instead it generates all the shit and takes only the 1st and 2ndits bad
+    #we can't do large basis sets until this is fixed
     adets=[]
     #loop over all subsets of size na from the list of orbitals
     for alist in itertools.combinations(range(norb),na):
@@ -428,3 +431,29 @@ def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets):
                 if n_excit_sets(k,(i,j)) in (0,1,2) and (i,j) not in return_list:
                     return_list.append((i,j))
     return return_list
+
+def construct_hamiltonian(ndets,coredetlist_sets,h1e,eri):
+    hrow = []
+    hcol = []
+    hval = []
+    for i in range(ndets):
+        idet=coredetlist_sets[i]
+        hii = calc_hii_sets(idet,h1e,eri)
+        hrow.append(i)
+        hcol.append(i)
+        hval.append(hii)
+        for j in range(i+1,ndets):
+            jdet=coredetlist_sets[j]
+            nexc_ij = n_excit_sets(idet,jdet)
+            if nexc_ij in (1,2):
+                if nexc_ij==1:
+                    hij = calc_hij_single_sets(idet,jdet,h1e,eri)
+                else:
+                    hij = calc_hij_double_sets(idet,jdet,h1e,eri)
+                hrow.append(i)
+                hrow.append(j)
+                hcol.append(j)
+                hcol.append(i)
+                hval.append(hij)
+                hval.append(hij)
+    return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
