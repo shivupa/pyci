@@ -18,3 +18,7 @@ decisions to make (and general observations):
         int('111101100',2) and int('0b111101100',2) both return 492 (an int)
       if python could iterate over the bits in the binary representation of an integer (without first converting it to a string or a list), this would probably be the best choice, but we'd need to be smart about leading zeros (or iterate in reverse order)
       if we exclusively use dictionaries/sets (of occupied orbitals), we could probably use set operations to do everything we need to do. (if we want to use these sets as dictionary keys, we'll have to use frozensets (dictionary keys need to be immutable))
+
+
+could pyscf.fci.cistring.gen_linkstr_index(orb_list, nocc, strs=None) be used?
+
