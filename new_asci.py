@@ -56,7 +56,7 @@ hrow=[]
 hcol=[]
 hval=[]
 cdets = 50
-tdets = 100
+tdets = 200
 E_old = 0
 convergence = 1e-10
 
