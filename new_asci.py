@@ -55,7 +55,7 @@ ndets=len(fulldetlist_sets)
 hrow=[]
 hcol=[]
 hval=[]
-cdets = 50
+cdets = 100
 tdets = 200
 E_old = 0
 convergence = 1e-10
@@ -105,11 +105,13 @@ while(np.abs(E - E_old) > convergence):
     E = eig_vals_sorted[0]
     print("Iteration Energy: ", E)
     #step 4
-    C = eig_vecs[:,np.argsort(eig_vals)[0]]
+    amplitudes = eig_vecs[:,np.argsort(eig_vals)[0]]
     coredetlist_sets = []
-    for i in np.argsort(np.abs(C))[::-1][0:cdets]:
+    for i in np.argsort(np.abs(amplitudes))[::-1][0:cdets]:
         coredetlist_sets.append(targetdetlist_sets[i])
-    C = C[np.argsort(np.abs(C))[::-1][0:tdets]]
+    C = {}
+    for i,j in zip(coredetlist_sets,np.argsort(np.abs(amplitudes))[::-1][0:cdets]):
+        C[i] = j
     coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
     ndets = np.shape(coredetlist_sets)[0]
     print("")
