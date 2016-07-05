@@ -201,12 +201,6 @@ def holes_parts_sign_double(idet,jdet,spin):
             parts.append(i)
     h1,h2 = holes
     p1,p2 = parts
-    ###DEBUG DEBUG DEBUG
-    if(h1>h2):
-        print("DEBUG: h1>h2")
-    if(p1>p2):
-        print("DEBUG: p1>p2")
-    ####################
     sign1 = getsign(holeint,partint,h1,p1)
     sign2 = getsign(holeint,partint,h2,p2)
     return (h1,h2,p1,p2,sign1*sign2)
@@ -246,9 +240,7 @@ def getsign(holeint,partint,h,p,debug=False):
     return sign
 
 def getsign_sets(holeset,h,p,debug=False):
-
     #determine which index comes first (hole or particle) for each pair
-
     if h < p:
         num = [i for i in holeset if i<p and i>h]
     else:
@@ -336,25 +328,6 @@ def a_b_single_sets(idet,jdet):
     hole,part,sign = hole_part_sign_single_sets(idet,jdet,spin)
     aocc,bocc = a_b_1hole_sets(idet,hole,spin)
     return (hole,part,sign,spin,aocc,bocc)
-
-#############Shit visualization function
-def hamiltonian_heatmap(h):
-    h = h.toarray()
-    h -= np.min(h)
-    h /= np.max(h)
-    fig = plt.figure(facecolor='white',figsize=(10,10))
-    ax = fig.add_subplot(111)
-    plt.rc('font', family='serif',size = 24)
-    plt.imshow(h, cmap='bone', interpolation='nearest')
-    for axis in ['top','bottom','left','right']:
-    	ax.spines[axis].set_linewidth(1.5)
-    ax.xaxis.set_tick_params(pad=7,width=1.5)#,length=10)
-    ax.yaxis.set_tick_params(pad = 7,width=1.5)#,length=10)
-    plt.title(r'Full Hamiltonian')
-    fig.tight_layout()
-    fig.savefig('ham.svg')
-    #plt.show()
-############################
 # Hii in spinorbs:
 # sum_i^{occ} <i|hcore|i> + 1/2 sum_{i,j}^{occ} (ii|jj) - (ij|ji)
 
@@ -395,10 +368,6 @@ def calc_hii(idet,hcore,eri):
     for ai in aocc:
         for bj in bocc:
             hii += 0.5 * eri[idx4(ai,ai,bj,bj)]
-#    if (abs(hii)>threshold):
-#        return hii
-#    else:
-#        return 0.0
     return hii
 # Hij(a->r) in spinorbs:
 # <r|hcore|i> + sum_j^{occ(both)} (ri|jj) - (rj|ji)
@@ -417,12 +386,7 @@ def calc_hij_single(idet,jdet,hcore,eri):
     for si in (bocc,aocc)[spin]:
         hij += eri[idx4(part,hole,si,si)]
     hij *= sign
-#    if (abs(hij)>threshold):
-#        return hij
-#    else:
-#        return 0.0
     return hij
-
 def calc_hij_double(idet,jdet,hcore,eri):
     hij=0.0
     h1,h2,p1,p2,sign,samespin = hole_part_sign_spin_double(idet,jdet)
@@ -430,12 +394,7 @@ def calc_hij_double(idet,jdet,hcore,eri):
     if samespin:
         hij -= eri[idx4(p1,h2,p2,h1)]
     hij *= sign
-#    if (abs(hij)>threshold):
-#        return hij
-#    else:
-#        return 0.0
     return hij
-
 def calc_hii_sets(idet,hcore,eri):
     hii=0.0
     aocc,bocc = idet
@@ -452,12 +411,7 @@ def calc_hii_sets(idet,hcore,eri):
     for ia in aocc:
         for jb in bocc:
             hii += eri[idx4(ia,ia,jb,jb)]
-#    if (abs(hii)>threshold):
-#        return hii
-#    else:
-#        return 0.0
     return hii
-
 def calc_hij_single_sets(idet,jdet,hcore,eri):
     hij=0.0
     hole,part,sign,spin,aocc,bocc = a_b_single_sets(idet,jdet)
@@ -468,12 +422,7 @@ def calc_hij_single_sets(idet,jdet,hcore,eri):
     for si in (bocc,aocc)[spin]:
         hij += eri[idx4(part,hole,si,si)]
     hij *= sign
-#    if (abs(hij)>threshold):
-#        return hij
-#    else:
-#        return 0.0
     return hij
-
 def calc_hij_double_sets(idet,jdet,hcore,eri):
     hij=0.0
     h1,h2,p1,p2,sign,samespin = hole_part_sign_spin_double_sets(idet,jdet)
@@ -481,8 +430,4 @@ def calc_hij_double_sets(idet,jdet,hcore,eri):
     if samespin:
         hij -= eri[idx4(p1,h2,p2,h1)]
     hij *= sign
-#    if (abs(hij)>threshold):
-#        return hij
-#    else:
-#        return 0.0
     return hij
