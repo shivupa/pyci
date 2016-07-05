@@ -142,51 +142,51 @@ for i,j in zip(eig_vals_sorted, efci):
 # MAIN LOOP
 #############
 # a^dagger_i a_j |psi>
-temp_detdict = {}
-temp_double_detdict = {}
-new_detdict = copy.deepcopy(original_detdict)
+#temp_detdict = {}
+#temp_double_detdict = {}
+#new_detdict = copy.deepcopy(original_detdict)
 #print(temp_detdict)
 
-for det in original_detdict:
-    occ_index = []
-    virt_index = []
-    count = 0
-    for i in det:
-        if i == "1":
-            occ_index.append(count)
-        else:
-            virt_index.append(count)
-        count +=1
+#for det in original_detdict:
+    #occ_index = []
+    #virt_index = []
+    #count = 0
+    #for i in det:
+        #if i == "1":
+            #occ_index.append(count)
+        #else:
+            #virt_index.append(count)
+        #count +=1
     #print(occ_index)
     #print(virt_index)
-    for i in occ_index:
-        for j in virt_index:
-            temp_det = list(det)
-            temp_det[i] = "0"
-            temp_det[j] = "1"
-            temp_det =  ''.join(temp_det)
-            temp_detdict[temp_det] = 0.1
+    #for i in occ_index:
+        #for j in virt_index:
+            #temp_det = list(det)
+            #temp_det[i] = "0"
+            #temp_det[j] = "1"
+            #temp_det =  ''.join(temp_det)
+            #temp_detdict[temp_det] = 0.1
             #print temp_det, temp_amplitude
-            for k in occ_index:
-                for l in virt_index:
-                    if k>i and l>j:
-                        temp_double_det = list(det)
-                        temp_double_det[i] = "0"
-                        temp_double_det[j] = "1"
-                        temp_double_det[k] = "0"
-                        temp_double_det[l] = "1"
-                        temp_double_det =  ''.join(temp_double_det)
-                        temp_double_detdict[temp_double_det] = 0.3
-for i in temp_detdict:
-    try:
-        new_detdict[i] += temp_detdict[i]
-    except:
-        new_detdict.update({i:temp_detdict[i]})
-for i in temp_double_detdict:
-    try:
-        new_detdict[i] += temp_double_detdict[i]
-    except:
-        new_detdict.update({i:temp_double_detdict[i]})
+            #for k in occ_index:
+                #for l in virt_index:
+                    #if k>i and l>j:
+                        #temp_double_det = list(det)
+                        #temp_double_det[i] = "0"
+                        #temp_double_det[j] = "1"
+                        #temp_double_det[k] = "0"
+                        #temp_double_det[l] = "1"
+                        #temp_double_det =  ''.join(temp_double_det)
+                        #temp_double_detdict[temp_double_det] = 0.3
+#for i in temp_detdict:
+    #try:
+        #new_detdict[i] += temp_detdict[i]
+    #except:
+        #new_detdict.update({i:temp_detdict[i]})
+#for i in temp_double_detdict:
+    #try:
+        #new_detdict[i] += temp_double_detdict[i]
+    #except:
+        #new_detdict.update({i:temp_double_detdict[i]})
 #new_detdict.update(temp_double_detdict)
 #detdict = {}
 #new_detdict.update(original_detdict)
