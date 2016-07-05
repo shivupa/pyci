@@ -310,6 +310,7 @@ def a_b_single_sets(idet,jdet):
 
 #TODO: test to make sure there aren't any missing factors of 2 or 0.5
 #TODO: just use alpha/beta occ lists instead of double/single occ lists
+""" #TODO(shiv): Unused consider deleting? We may eventually need this though
 def calc_hii(idet,hcore,eri):
     hii=0.0
     docc,aocc,bocc = d_a_b_occ(idet)
@@ -335,10 +336,6 @@ def calc_hii(idet,hcore,eri):
         for bj in bocc:
             hii += 0.5 * eri[idx4(ai,ai,bj,bj)]
     return hii
-# Hij(a->r) in spinorbs:
-# <r|hcore|i> + sum_j^{occ(both)} (ri|jj) - (rj|ji)
-# multiply by appropriate sign
-# (parity of permutation that puts orbitals back in normal order from direct hole->particle substitution)
 def calc_hij_single(idet,jdet,hcore,eri):
     hij=0.0
     hole,part,sign,spin,docc,aocc,bocc = d_a_b_single(idet,jdet)
@@ -361,6 +358,12 @@ def calc_hij_double(idet,jdet,hcore,eri):
         hij -= eri[idx4(p1,h2,p2,h1)]
     hij *= sign
     return hij
+"""
+# Hij(a->r) in spinorbs:
+# <r|hcore|i> + sum_j^{occ(both)} (ri|jj) - (rj|ji)
+# multiply by appropriate sign
+# (parity of permutation that puts orbitals back in normal order from direct hole->particle substitution)
+
 def calc_hii_sets(idet,hcore,eri):
     hii=0.0
     aocc,bocc = idet
@@ -376,6 +379,7 @@ def calc_hii_sets(idet,hcore,eri):
             hii += 0.5*(eri[idx4(ib,ib,jb,jb)]-eri[idx4(ib,jb,jb,ib)])
     for ia in aocc:
         for jb in bocc:
+            #TODO(shiv): I believe this is missing a factor of 0.5? Or im just unsure where this term comes from
             hii += eri[idx4(ia,ia,jb,jb)]
     return hii
 def calc_hij_single_sets(idet,jdet,hcore,eri):
