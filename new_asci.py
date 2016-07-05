@@ -60,14 +60,11 @@ tdets = 200
 E_old = 0
 convergence = 1e-10
 
-
 targetdetlist_sets = []
 coredetlist_sets = [(frozenset([1,2,3,4]),frozenset([1,2,3,4]))]
+C = {(frozenset([1,2,3,4]),frozenset([1,2,3,4])):1.0}
 coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
-
 ndets = np.shape(coredetlist_sets)[0]
-C = np.zeros(ndets)
-C[0] = 1
 print("Hartree-Fock Energy: ", E)
 print("")
 while(np.abs(E - E_old) > convergence):
@@ -77,11 +74,17 @@ while(np.abs(E - E_old) > convergence):
     #step 0
     core_ham = construct_hamiltonian(ndets,coredetlist_sets,h1e,eri)
     #step 1
-    A = np.zeros(tdets)
-    for i in range(tdets):
-        for j in range(i+1,tdets):
-            A[i] += core_ham[i,j]*C[j]
-        A[i] /= core_ham[i,i] - E
+    A = {}
+    for i in range(ndets):
+        temp = 0.0
+        for j in range(cdets):
+            if i!=j:
+                temp += core_ham[i,j]*C[coredetlist_sets[j]]
+        temp /= core_ham[i,i] - E
+        try:
+            A[coredetlist_sets[i]] = temp
+        except:
+            print(coredetlist_sets[i], " already in")
     #step 2
     targetdetlist_sets = []
     for i in np.argsort(np.abs(A))[::-1][0:tdets]:
