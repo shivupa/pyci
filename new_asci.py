@@ -69,9 +69,13 @@ ndets = np.shape(coredetlist_sets)[0]
 C = np.zeros(ndets)
 C[0] = 1
 while(np.abs(E - E_old) > convergence):
-
-    print ndets
+    print("Core Dets: ",cdets)
+    print("Exitation Dets: ",ndets)
+    print("Target Dets: ",tdets)
     #step 0
+    hrow = []
+    hcol = []
+    hval = []
     for i in range(ndets):
         idet=coredetlist_sets[i]
         hii = calc_hii_sets(idet,h1e,eri)
@@ -94,15 +98,18 @@ while(np.abs(E - E_old) > convergence):
                 hval.append(hij)
     core_ham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
     #step 1
-    A = np.zeros(ndets)
-    for i in range(ndets):
-        for j in range(i+1,ndets):
+    A = np.zeros(tdets)
+    for i in range(tdets):
+        for j in range(i+1,tdets):
             A[i] += core_ham[i,j]*C[j]
         A[i] /= core_ham[i,i] - E
     #step 2
     targetdetlist_sets = []
     for i in np.argsort(np.abs(A))[::-1][0:tdets]:
         targetdetlist_sets.append(coredetlist_sets[i])
+    hrow = []
+    hcol = []
+    hval = []
     #step 3
     for i in range(tdets):
         idet=targetdetlist_sets[i]
@@ -129,17 +136,18 @@ while(np.abs(E - E_old) > convergence):
     eig_vals_sorted = np.sort(eig_vals)[:printroots] + mol.energy_nuc()
     E_old = E
     E = eig_vals_sorted[0]
-    print(E)
+    print("Iteration Energy: ", E)
     #step 4
-    C = eig_vecs[np.argsort(eig_vals)[0]]
+    C = eig_vecs[:,np.argsort(eig_vals)[0]]
     for i in np.argsort(np.abs(C))[::-1][0:cdets]:
         coredetlist_sets.append(targetdetlist_sets[i])
     coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
     ndets = np.shape(coredetlist_sets)[0]
+    print("")
 eig_vals_gamess = [-75.0129802245,
                    -74.7364625517,
                    -74.6886742417,
                    -74.6531877287]
 print("first {:} pyci eigvals vs PYSCF eigvals vs GAMESS eigvals".format(printroots))
-#for i,j,k in zip(eig_vals_sorted, efci, eig_vals_gamess):
-    #print(i,j,k)
+for i,j,k in zip(eig_vals_sorted, efci, eig_vals_gamess):
+    print(i,j,k)
