@@ -82,16 +82,18 @@ while(np.abs(E - E_old) > convergence):
                 try:
                     temp += core_ham[i,j]*C[coredetlist_sets[j]]
                 except:
-                    print(coredetlist_sets[i], " not in")
+                    pass
+                    #print(coredetlist_sets[i], " not in")
         temp /= core_ham[i,i] - E
         try:
             A[coredetlist_sets[i]] = temp
         except:
-            print(coredetlist_sets[i], " already in")
+            pass
+            #print(coredetlist_sets[i], " already in")
     #step 2
     targetdetlist_sets = []
-    for i in np.argsort(np.abs(A))[::-1][0:tdets]:
-        targetdetlist_sets.append(coredetlist_sets[i])
+    for i in sorted(A, key=A.get, reverse=True)[0:tdets]:
+        targetdetlist_sets.append(i)
     hrow = []
     hcol = []
     hval = []
