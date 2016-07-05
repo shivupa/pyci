@@ -57,13 +57,14 @@ cdets=len(core_sets)
 hrow=[]
 hcol=[]
 hval=[]
-cdets = 50
-tdets = 100
+cdets = 100
+tdets = 50
 E_old = 0
 convergence = 1e-6
 C = np.zeros(cdets)
 C[0] = 1
 A = np.zeros(cdets)
+targetdetlist_sets = []
 while(E - E_old > convergence):
     #step 0
     for i in range(cdets):
@@ -93,6 +94,9 @@ while(E - E_old > convergence):
             A[i] += H[i,j]*C[j]
         A[i] /= coreham[i,i] - E
     #step 2
+    for i in np.argsort(np.abs(A))[::-1][0:tdets]:
+        targetdetlist_sets.append(coredetlist_sets[i])
+    #step 3
     eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=2*printroots)
     eig_vals_sorted = sorted(eig_vals)[:printroots] + mol.energy_nuc()
 eig_vals_gamess = [-75.0129802245,

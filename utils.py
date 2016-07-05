@@ -74,7 +74,6 @@ def gen_dets_sets(norb,na,nb):
     """generate all determinants with a given number of spatial orbitals
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
-    #TODO(shiv): can this become a set instead of a list? probably unnecessary
     adets=[]
     #loop over all subsets of size na from the list of orbitals
     for alist in itertools.combinations(range(norb),na):
