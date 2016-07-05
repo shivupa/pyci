@@ -35,14 +35,14 @@ Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
 nao=mol.nao_nr()
 myhf = scf.RHF(mol)
 E = myhf.kernel()
-c = myhf.mo_coeff
+mo_coefficients = myhf.mo_coeff
 #if you change the sign of these two orbitals, the hamiltonian matrix elements agree with those from GAMESS
 #c.T[2]*=-1
 #c.T[5]*=-1
-cisolver = fci.FCI(mol, c)
+cisolver = fci.FCI(mol, mo_coefficients)
 efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
-h1e = reduce(np.dot, (c.T, myhf.get_hcore(), c))
-eri = ao2mo.kernel(mol, c)
+h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
+eri = ao2mo.kernel(mol, mo_coefficients)
 #use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
 #make full 4-index eris in MO basis (only for testing idx2)
 num_orbs=2*nao
@@ -60,6 +60,7 @@ tdets = 100
 E_old = 0
 convergence = 1e-6
 C = np.zeros(cdets)
+C[0] = 1
 while(E - E_old > convergence):
     for i in range(cdets):
         idet=fulldetlist_sets[i]

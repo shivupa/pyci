@@ -401,3 +401,25 @@ def calc_hij_double_sets(idet,jdet,hcore,eri):
         hij -= eri[idx4(p1,h2,p2,h1)]
     hij *= sign
     return hij
+
+##############################################ASCI funcs
+#TODO: only generate first and second excitations here
+def gen_dets_sets_truncated(norb,na,nb):
+    """generate cdets determinants with a given number of spatial orbitals
+    and alpha,beta electrons.
+    return a list of 2-tuples of strings"""
+    #TODO(shiv): can this become a set instead of a list? probably unnecessary
+    adets=[]
+    #loop over all subsets of size na from the list of orbitals
+    for alist in itertools.combinations(range(norb),na):
+        #start will all orbs unoccupied
+        adets.append(frozenset(alist))
+    if na==nb:
+        #if nb==na, make a copy of the alpha strings (beta will be the same)
+        bdets=adets[:]
+    else:
+        bdets=[]
+        for blist in itertools.combinations(range(norb),nb):
+            bdets.append(frozenset(blist))
+    #return all pairs of (alpha,beta) strings
+    return [(i,j) for i in adets for j in bdets]

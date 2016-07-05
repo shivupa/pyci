@@ -1,2 +1,3 @@
 # pyci
-A Python Configuration Interaction program...
+## Authors: Kevin Gasperich and Shiv Upadhyay
+A Python Configuration Interaction program.
