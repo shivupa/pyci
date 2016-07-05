@@ -79,7 +79,10 @@ while(np.abs(E - E_old) > convergence):
         temp = 0.0
         for j in range(cdets):
             if i!=j:
-                temp += core_ham[i,j]*C[coredetlist_sets[j]]
+                try:
+                    temp += core_ham[i,j]*C[coredetlist_sets[j]]
+                except:
+                    print(coredetlist_sets[i], " not in")
         temp /= core_ham[i,i] - E
         try:
             A[coredetlist_sets[i]] = temp
