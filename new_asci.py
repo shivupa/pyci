@@ -63,7 +63,9 @@ E_old = 0
 convergence = 1e-6
 C = np.zeros(cdets)
 C[0] = 1
+A = np.zeros(cdets)
 while(E - E_old > convergence):
+    #step 0
     for i in range(cdets):
         idet=coredetlist_sets[i]
         hii = calc_hii_sets(idet,h1e,eri)
@@ -84,7 +86,13 @@ while(E - E_old > convergence):
                 hcol.append(i)
                 hval.append(hij)
                 hval.append(hij)
-    core_ham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
+    core_ham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(cdets,cdets))
+    #step 1
+    for i in range(cdets):
+        for j in range(i+1,cdets):
+            A[i] += H[i,j]*C[j]
+        A[i] /= coreham[i,i] - E
+    #step 2
     eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=2*printroots)
     eig_vals_sorted = sorted(eig_vals)[:printroots] + mol.energy_nuc()
 eig_vals_gamess = [-75.0129802245,
