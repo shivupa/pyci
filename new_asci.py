@@ -63,7 +63,7 @@ C = np.zeros(cdets)
 C[0] = 1
 A = np.zeros(cdets)
 targetdetlist_sets = []
-coredetlist_sets = [(frozenset([1,2,3,4]),([1,2,3,4]))]
+coredetlist_sets = [(frozenset([1,2,3,4]),frozenset([1,2,3,4]))]
 coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
 while(E - E_old > convergence):
     ndets = np.shape(coredetlist_sets)

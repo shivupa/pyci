@@ -425,6 +425,6 @@ def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets):
     for i in adets:
         for j in bdets:
             for k in cdetlist_sets:
-                if n_excit_sets(k,(i,j) in (0,1,2)) and (i,j) not in return_list:
+                if n_excit_sets(k,(i,j)) in (0,1,2) and (i,j) not in return_list:
                     return_list.append((i,j))
     return return_list
