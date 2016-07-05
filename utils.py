@@ -59,12 +59,10 @@ def n_excit_spin_sets(idet,jdet,spin):
 #long slow down if we call this in n_excit_spin weird
 def hamweight(strdet):
     return strdet.count('1')
-
 def bitstr2intlist(detstr):
     """turn a string into a list of ints
     input of "1100110" will return [1,1,0,0,1,1,0]"""
     return list(map(int,list(detstr)))
-
 def occ2bitstr(occlist,norb,index=0):
     """turn a list of ints of indices of occupied orbitals
     and total number of orbitals into a bit string """
@@ -72,40 +70,11 @@ def occ2bitstr(occlist,norb,index=0):
     for i in occlist:
         bitlist[i-index]="1"
     return ''.join(bitlist)
-
-def gen_dets(norb,na,nb,debug=False):
-    """generate all determinants with a given number of spatial orbitals
-    and alpha,beta electrons.
-    return a list of 2-tuples of strings"""
-    adets=[]
-    #loop over all subsets of size na from the list of orbitals
-    for alist in itertools.combinations(range(norb),na):
-        #start will all orbs unoccupied
-        if debug:
-            print(alist)
-        idet=["0" for i in range(norb)]
-        for orb in alist:
-            #for each occupied orbital (index), replace the "0" with a "1"
-            idet[orb]="1"
-        #turn the list into a string
-        adets.append(''.join(idet))
-    if na==nb:
-        #if nb==na, make a copy of the alpha strings (beta will be the same)
-        bdets=adets[:]
-    else:
-        bdets=[]
-        for blist in itertools.combinations(range(norb),nb):
-            idet=["0" for i in range(norb)]
-            for orb in blist:
-                idet[orb]="1"
-            bdets.append(''.join(idet))
-    #return all pairs of (alpha,beta) strings
-    return [(i,j) for i in adets for j in bdets]
-
 def gen_dets_sets(norb,na,nb):
     """generate all determinants with a given number of spatial orbitals
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
+    #TODO(shiv): can this become a set instead of a list? probably unnecessary
     adets=[]
     #loop over all subsets of size na from the list of orbitals
     for alist in itertools.combinations(range(norb),na):
@@ -120,7 +89,6 @@ def gen_dets_sets(norb,na,nb):
             bdets.append(frozenset(blist))
     #return all pairs of (alpha,beta) strings
     return [(i,j) for i in adets for j in bdets]
-
 def d_a_b_occ(idet):
     """given idet as a 2-tuple of alpha,beta bitstrings,
     return 3-tuple of lists of indices of
@@ -141,7 +109,6 @@ def d_a_b_occ(idet):
             #if beta and not alpha, then this is singly occupied (beta)
             bocc.append(i)
     return (docc,aocc,bocc)
-
 def a_b_occ(idet):
     """given idet as a 2-tuple of alpha,beta bitstrings,
     return 2-tuple of lists of indices of

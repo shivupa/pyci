@@ -28,18 +28,11 @@ mol = gto.M(
 )
 #Number of eigenvalues desired
 printroots=4
-
-
 #############
 # INITIALIZE
 #############
 Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
 nao=mol.nao_nr()
-s = mol.intor('cint1e_ovlp_sph')
-t = mol.intor('cint1e_kin_sph')
-v = mol.intor('cint1e_nuc_sph')
-h=t+v
-
 myhf = scf.RHF(mol)
 E = myhf.kernel()
 c = myhf.mo_coeff
@@ -55,11 +48,8 @@ eri = ao2mo.kernel(mol, c)
 num_orbs=2*nao
 num_occ = mol.nelectron
 num_virt = num_orbs - num_occ
-
 fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
 ndets=len(fulldetlist_sets)
-#start with HF determinant
-original_detdict = {fulldetlist_sets[0]:1.0}
 #lists for csr sparse storage of hamiltonian
 #if this is just for storage (and not diagonalization) then we can use a dict instead (or store as upper half of sparse matrix)
 hrow=[]
