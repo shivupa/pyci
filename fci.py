@@ -134,9 +134,9 @@ eig_vals_gamess = [-75.0129802245,
                    -74.7364625517,
                    -74.6886742417,
                    -74.6531877287]
-print("first {:} pyci eigvals vs PYSCF eigvals".format(printroots))
-for i,j in zip(eig_vals_sorted, efci):
-    print(i,j)
+print("first {:} pyci eigvals vs PYSCF eigvals vs GAMESS eigvals".format(printroots))
+for i,j,k in zip(eig_vals_sorted, efci, eig_vals_gamess):
+    print(i,j,k)
 
 #############
 # MAIN LOOP
