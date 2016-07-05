@@ -403,16 +403,15 @@ def calc_hij_double_sets(idet,jdet,hcore,eri):
 
 ##############################################ASCI funcs
 #TODO: only generate first and second excitations here
-def gen_dets_sets_truncated(norb,na,nb):
+def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets=None):
     """generate cdets determinants with a given number of spatial orbitals
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
+    #TODO(shiv) this should only generate first and second exctiations but instead it generates all the shit and takes only the 1st and 2ndits bad
     adets=[]
-    hartree_fock = (frozenset([1,2,3,4]),([1,2,3,4]))
     #loop over all subsets of size na from the list of orbitals
     for alist in itertools.combinations(range(norb),na):
         #start will all orbs unoccupied
-        if
         adets.append(frozenset(alist))
     if na==nb:
         #if nb==na, make a copy of the alpha strings (beta will be the same)
@@ -422,10 +421,12 @@ def gen_dets_sets_truncated(norb,na,nb):
         for blist in itertools.combinations(range(norb),nb):
             bdets.append(frozenset(blist))
     #return all pairs of (alpha,beta) strings that are single and double excitations from HF
-    hartree_fock = (frozenset([1,2,3,4]),([1,2,3,4]))
+    if cdetlist_sets == None:
+        cdetlist_sets = [(frozenset([1,2,3,4]),([1,2,3,4]))]
     return_list = []
     for i in adets:
         for j in bdets:
-            if n_excit_sets(hartree_fock,(i,j) in (0,1,2)):
-                return_list.append((i,j))
+            for k in cdetlist_sets:
+                if n_excit_sets(k,(i,j) in (0,1,2)) and (i,j) not in return_list:
+                    return_list.append((i,j))
     return return_list

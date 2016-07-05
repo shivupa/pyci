@@ -57,23 +57,26 @@ cdets=len(core_sets)
 hrow=[]
 hcol=[]
 hval=[]
-cdets = 100
-tdets = 50
+cdets = 50
+tdets = 100
 E_old = 0
 convergence = 1e-6
 C = np.zeros(cdets)
 C[0] = 1
 A = np.zeros(cdets)
 targetdetlist_sets = []
+coredetlist_sets = [(frozenset([1,2,3,4]),([1,2,3,4]))]
+coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
 while(E - E_old > convergence):
+    ndets = np.shape(coredetlist_sets)
     #step 0
-    for i in range(cdets):
+    for i in range(ndets):
         idet=coredetlist_sets[i]
         hii = calc_hii_sets(idet,h1e,eri)
         hrow.append(i)
         hcol.append(i)
         hval.append(hii)
-        for j in range(i+1,cdets):
+        for j in range(i+1,ndets):
             jdet=coredetlist_sets[j]
             nexc_ij = n_excit_sets(idet,jdet)
             if nexc_ij in (1,2):
@@ -87,18 +90,49 @@ while(E - E_old > convergence):
                 hcol.append(i)
                 hval.append(hij)
                 hval.append(hij)
-    core_ham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(cdets,cdets))
+    core_ham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
     #step 1
-    for i in range(cdets):
-        for j in range(i+1,cdets):
+    for i in range(ndets):
+        for j in range(i+1,ndets):
             A[i] += H[i,j]*C[j]
         A[i] /= coreham[i,i] - E
     #step 2
+    targetdetlist_sets = []
     for i in np.argsort(np.abs(A))[::-1][0:tdets]:
         targetdetlist_sets.append(coredetlist_sets[i])
     #step 3
-    eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=2*printroots)
-    eig_vals_sorted = sorted(eig_vals)[:printroots] + mol.energy_nuc()
+    for i in range(tdets):
+        idet=targetdetlist_sets[i]
+        hii = calc_hii_sets(idet,h1e,eri)
+        hrow.append(i)
+        hcol.append(i)
+        hval.append(hii)
+        for j in range(i+1,tdets):
+            jdet=targetdetlist_sets[j]
+            nexc_ij = n_excit_sets(idet,jdet)
+            if nexc_ij in (1,2):
+                if nexc_ij==1:
+                    hij = calc_hij_single_sets(idet,jdet,h1e,eri)
+                else:
+                    hij = calc_hij_double_sets(idet,jdet,h1e,eri)
+                hrow.append(i)
+                hrow.append(j)
+                hcol.append(j)
+                hcol.append(i)
+                hval.append(hij)
+                hval.append(hij)
+    target_ham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(tdets,tdets))
+    eig_vals,eig_vecs = sp.sparse.linalg.eigsh(target_ham,k=2*printroots)
+    eig_vals_sorted = np.sort(eig_vals)[:printroots] + mol.energy_nuc()
+    E_old = E
+    E = eig_vals_sorted[0]
+    print(E)
+    #step 4
+    C = eig_vecs[np.argsort(eig_vals)[0]]
+    for i in np.argsort(np.abs(C))[::-1][0:cdets]:
+        coredetlist_sets.append(targetdetlist_sets[i])
+    coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
+
 eig_vals_gamess = [-75.0129802245,
                    -74.7364625517,
                    -74.6886742417,
