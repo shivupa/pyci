@@ -254,7 +254,6 @@ def hole_part_sign_spin_double_sets(idet,jdet):
 def d_a_b_1hole(idet,hole,spin):
     #get doubly/singly occ orbs in the first det
     docc,aocc,bocc = d_a_b_occ(idet)
-
     #account for the excitation to obtain only the orbs that are occupied in both dets
     if hole in docc:
         docc = sorted(list(set(docc)-{hole}))
@@ -371,10 +370,10 @@ def calc_hii_sets(idet,hcore,eri):
         hii += hcore[ib,ib]
     for ia in aocc:
         for ja in aocc:
-            hii += 0.5* (eri[idx4(ia,ia,ja,ja)]-eri[idx4(ia,ja,ja,ia)])
+            hii += 0.5*(eri[idx4(ia,ia,ja,ja)]-eri[idx4(ia,ja,ja,ia)])
     for ib in bocc:
         for jb in bocc:
-            hii += 0.5* (eri[idx4(ib,ib,jb,jb)]-eri[idx4(ib,jb,jb,ib)])
+            hii += 0.5*(eri[idx4(ib,ib,jb,jb)]-eri[idx4(ib,jb,jb,ib)])
     for ia in aocc:
         for jb in bocc:
             hii += eri[idx4(ia,ia,jb,jb)]
