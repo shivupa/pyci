@@ -434,11 +434,11 @@ def gen_dets_sets_truncated(norb,cdetlist_sets):
     nb = cdetlist_sets[0][1]
     return_list = []
     for i in cdetlist_sets:
-        return_list.append(get_excitations(i,norb,0,1))
-        return_list.append(get_excitations(i,norb,1,0))
-        return_list.append(get_excitations(i,norb,0,2))
-        return_list.append(get_excitations(i,norb,2,0))
-        return_list.append(get_excitations(i,norb,1,1))
+        return_list.extend(get_excitations(i,norb,0,1))
+        return_list.extend(get_excitations(i,norb,1,0))
+        return_list.extend(get_excitations(i,norb,0,2))
+        return_list.extend(get_excitations(i,norb,2,0))
+        return_list.extend(get_excitations(i,norb,1,1))
     return return_list
 
     """ shit code

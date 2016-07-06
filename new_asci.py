@@ -63,7 +63,8 @@ convergence = 1e-10
 targetdetlist_sets = []
 coredetlist_sets = [(frozenset([1,2,3,4]),frozenset([1,2,3,4]))]
 C = {(frozenset([1,2,3,4]),frozenset([1,2,3,4])):1.0}
-coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
+coredetlist_sets=gen_dets_sets_truncated(nao,coredetlist_sets)
+print np.shape(coredetlist_sets)
 ndets = np.shape(coredetlist_sets)[0]
 print("Hartree-Fock Energy: ", E)
 print("")
