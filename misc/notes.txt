@@ -22,3 +22,22 @@ decisions to make (and general observations):
 
 could pyscf.fci.cistring.gen_linkstr_index(orb_list, nocc, strs=None) be used?
 
+EQUATION 4 IMPLEMENTATION:
+    the A_{i} vector in equation 4 contains all of the dets that are connected to the core space; we will need this whole list.
+    in equation 4, we need to evaluate H_{ij}C_{j} / (H_{ii} - E) for each det j in the core and det i in the space of A_{i}
+    if j is not connected to i, we don't need to evaluate H_{ij}C_{j} (it will be equal to zero)
+    
+    we can either generate a list of connected dets for each core det, then do this double loop (core dets outer loop, connected dets inner loop)
+    OR 
+    we could generate a list of core dets connected to each det in A_{i} (or in the whole space) and do the outer loop over dets in A_{i} and the inner loop over core dets that are connected to det i
+
+    the former approach seems to make more sense, as it would be easier to just generate the dets connected to j than it would be to loop over all dets (i) and then find the set of dets connected to det i that are also in the core space.
+
+    one possible implementation of equation 4:
+        1. generate a dictionary that contains all dets connected to the core space as keys.  Initial values all set as 0.0
+        2. for each det in the core space, generate some iterable structure containing all dets connected to that det
+        3a. outer loop over each det j in the core space
+        3b. inner loop over each det i connected to core det j (if we do step 2 here, we'll only have to store one such list at a time)
+        3c. inside the inner loop, add H_{ij} * C_{j} to the amplitude associated with det i (in the dictionary created in step 1) 
+        4. after this double loop, for each det i in the dictionary, divide the value by (H_{ii}-E)
+        5?. (not sure about this part) add in the initial weights of all core dets.  If a core det is already in the dictionary, just update the value.  If a core det is not in the dictionary, add a new entry for it.
