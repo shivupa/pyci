@@ -2,7 +2,7 @@ import itertools
 import scipy as sp
 import scipy.linalg as spla
 import scipy.sparse.linalg as splinalg
-
+import copy
 #2-index transformation for accessing eri elements with standard 4 indices
 #TODO: only cache i<j elements?
 __idx2_cache = {}
@@ -411,8 +411,39 @@ def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets):
     return a list of 2-tuples of strings"""
     #TODO(shiv) this should only generate first and second exctiations but instead it generates all the shit and takes only the 1st and 2ndits bad
     #we can't do large basis sets until this is fixed
-    adets=[]
+    adets_core=[]
+    bdets_core=[]
+    return_list = []
     #loop over all subsets of size na from the list of orbitals
+    for i in cdetlist_sets:
+        adets_core.append(i[0])
+        bdets_core.append(i[1])
+        return_list.append(i)
+    for aset, bset in zip(adets_core,bdets_core):
+        aunocc = frozenset(range(norb)).difference(aset)
+        bunocc = frozenset(range(norb)).difference(bset)
+        for i in aset:
+            for j in aunocc:
+                return_list.append(((aset.difference({i}))|(aunocc.difference({j})),bset))
+                for k in aset.difference({i}):
+                    for l in aunocc.difference({j}):
+                        return_list.append(((aset.difference({i,k}))|(aunocc.difference({j,l})),bset))
+                for k in bset:
+                    for l in bunocc:
+                        return_list.append(((aset.difference({i,k}))|(aunocc.difference({j,l})),(bset.difference({k}))|(bunocc.difference({l}))))
+        for i in bset:
+            for j in bunocc:
+                return_list.append((aset,(bset.difference({i}))|(bunocc.difference({j}))))
+                for k in bset.difference({i}):
+                    for l in bunocc.difference({j}):
+                        return_list.append((aset,(bset.difference({i,k}))|(bunocc.difference({j,l}))))
+                for k in aset:
+                    for l in aunocc:
+                        return_list.append(((aset.difference({k}))|(aunocc.difference({l})),(bset.difference({i}))|(bunocc.difference({j}))))
+        #turn it into a set and then back to a list to remove duplicates this is most likely slow
+        #TODO:fix slowness
+    return list(set(return_list))
+    """ shit code
     for alist in itertools.combinations(range(norb),na):
         #start will all orbs unoccupied
         adets.append(frozenset(alist))
@@ -430,8 +461,11 @@ def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets):
             for k in cdetlist_sets:
                 if n_excit_sets(k,(i,j)) in (0,1,2) and (i,j) not in return_list:
                     return_list.append((i,j))
+    for k in cdetlist_sets:
+        if k not in return_list:
+            return_list.append((i,j))
     return return_list
-
+    """
 def construct_hamiltonian(ndets,coredetlist_sets,h1e,eri):
     hrow = []
     hcol = []
