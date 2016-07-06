@@ -426,11 +426,22 @@ def get_excitations(det,norb,aexc,bexc):
 
 ##############################################ASCI funcs
 #TODO: only generate first and second excitations here
-def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets):
+def gen_dets_sets_truncated(norb,cdetlist_sets):
     """generate cdets determinants with a given number of spatial orbitals
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
-    """ Shit code
+    na = cdetlist_sets[0][0]
+    nb = cdetlist_sets[0][1]
+    return_list = []
+    for i in cdetlist_sets:
+        return_list.append(get_excitations(i,norb,0,1))
+        return_list.append(get_excitations(i,norb,1,0))
+        return_list.append(get_excitations(i,norb,0,2))
+        return_list.append(get_excitations(i,norb,2,0))
+        return_list.append(get_excitations(i,norb,1,1))
+    return return_list
+
+    """ shit code
     #TODO(shiv) this should only generate first and second exctiations but instead it generates all the shit and takes only the 1st and 2ndits bad
     #we can't do large basis sets until this is fixed
     adets_core=[]
