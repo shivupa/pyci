@@ -50,21 +50,21 @@ num_occ = mol.nelectron
 num_virt = num_orbs - num_occ
 fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
 ndets=len(fulldetlist_sets)
-#lists for csr sparse storage of hamiltonian
-#if this is just for storage (and not diagonalization) then we can use a dict instead (or store as upper half of sparse matrix)
-hrow=[]
-hcol=[]
-hval=[]
-cdets = 100
-tdets = 200
+full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
+
+
+
+
+
+cdets = 50
+tdets = 100
 E_old = 0
 convergence = 1e-10
 
 targetdetlist_sets = []
-coredetlist_sets = [(frozenset([1,2,3,4]),frozenset([1,2,3,4]))]
-C = {(frozenset([1,2,3,4]),frozenset([1,2,3,4])):1.0}
+C = {(frozenset(range(Na)),frozenset(range(Nb))):1.0}
+coredetlist_sets = C.keys()
 coredetlist_sets=gen_dets_sets_truncated(nao,coredetlist_sets)
-print np.shape(coredetlist_sets)
 ndets = np.shape(coredetlist_sets)[0]
 print("Hartree-Fock Energy: ", E)
 print("")
@@ -72,9 +72,12 @@ while(np.abs(E - E_old) > convergence):
     print("Core Dets: ",cdets)
     print("Exitation Dets: ",ndets)
     print("Target Dets: ",tdets)
-    #step 0
-    core_ham = construct_hamiltonian(ndets,coredetlist_sets,h1e,eri)
     #step 1
+    indicies = []
+    for i in coredetlist_sets:
+        indicies.extend(np.where(fulldetlist_sets == i))
+    core_ham = get_smaller_hamiltonian(full_hamiltonian,indicies)
+    #STOPPING HERE FOR NOW BECAUSE I HAVE GROUP MEETING
     A = {}
     for i in range(ndets):
         temp = 0.0
@@ -91,7 +94,7 @@ while(np.abs(E - E_old) > convergence):
         except:
             pass
             #print(coredetlist_sets[i], " already in")
-    print(A[(frozenset([0,1,2,3]),frozenset([0,1,2,3]))])
+    print(A[(frozenset([0,1,2,3,4]),frozenset([0,1,2,3,4]))])
     exit()
     #step 2
     targetdetlist_sets = []
