@@ -403,6 +403,27 @@ def calc_hij_double_sets(idet,jdet,hcore,eri):
     hij *= sign
     return hij
 
+def get_excitations(det,norb,aexc,bexc):
+    aocc=det[0]
+    bocc=det[1]
+    orbs=frozenset(range(norb))
+    avirt=orbs-aocc
+    bvirt=orbs-bocc
+
+    adets=[]
+    bdets=[]
+    if aexc > len(avirt) or aexc > len(aocc) or bexc > len(bvirt) or bexc > len(bocc):
+        raise
+    for iocc in itertools.combinations(aocc,aexc):
+        for ivirt in itertools.combinations(avirt,aexc):
+            adets.append(aocc - set(iocc) | set(ivirt))
+    for iocc in itertools.combinations(bocc,bexc):
+        for ivirt in itertools.combinations(bvirt,bexc):
+            bdets.append(bocc - set(iocc) | set(ivirt))
+    return [(i,j) for i in adets for j in bdets]
+
+    
+    
 ##############################################ASCI funcs
 #TODO: only generate first and second excitations here
 def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets):
