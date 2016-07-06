@@ -63,11 +63,17 @@ E_old = 0
 convergence = 1e-10
 
 targetdetlist_sets = []
+<<<<<<< HEAD
+C = {(frozenset(range(Na)),frozenset(range(Nb))):1.0}
+coredetlist_sets = C.keys()
+coredetlist_sets=gen_dets_sets_truncated(nao,coredetlist_sets)
+=======
 #why are there only 8 electrons?
 coredetlist_sets = [(frozenset([1,2,3,4]),frozenset([1,2,3,4]))]
 C = {(frozenset([1,2,3,4]),frozenset([1,2,3,4])):1.0}
 coredetlist_sets=gen_dets_sets_truncated(nao,coredetlist_sets)
 print(np.shape(coredetlist_sets))
+>>>>>>> a1506e25caaab56bc1f4ad0cb473784ff49d0b4a
 ndets = np.shape(coredetlist_sets)[0]
 print("Hartree-Fock Energy: ", E)
 print("")
@@ -97,7 +103,12 @@ while(np.abs(E - E_old) > convergence):
         except:
             pass
             #print(coredetlist_sets[i], " already in")
+<<<<<<< HEAD
     print(A[(frozenset([0,1,2,3,4]),frozenset([0,1,2,3,4]))])
+=======
+    print(A[(frozenset([0,1,2,3]),frozenset([0,1,2,3]))])
+    #what does this do?
+>>>>>>> a1506e25caaab56bc1f4ad0cb473784ff49d0b4a
     exit()
     #step 2
     targetdetlist_sets = []
