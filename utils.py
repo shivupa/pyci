@@ -445,15 +445,9 @@ def gen_dets_sets_truncated(norb,cdetlist_sets):
     """generate cdets determinants with a given number of spatial orbitals
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
-    na = cdetlist_sets[0][0]
-    nb = cdetlist_sets[0][1]
     return_list = []
     for i in cdetlist_sets:
-        return_list.extend(get_excitations(i,norb,0,1))
-        return_list.extend(get_excitations(i,norb,1,0))
-        return_list.extend(get_excitations(i,norb,0,2))
-        return_list.extend(get_excitations(i,norb,2,0))
-        return_list.extend(get_excitations(i,norb,1,1))
+        return_list.extend(gen_singles_doubles(i,norb))
     return return_list
 
     """ shit code
@@ -539,3 +533,20 @@ def construct_hamiltonian(ndets,coredetlist_sets,h1e,eri):
                 hval.append(hij)
                 hval.append(hij)
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
+
+def get_smaller_hamiltonian(h,indicies):
+    hrow = []
+    hcol = []
+    hval = []
+    for i in range(len(indicies)):
+        hrow.append(i)
+        hcol.append(i)
+        hval.append(h[i,i])
+        for j in range(i+1,len(indicies)):
+            hrow.append(i)
+            hrow.append(j)
+            hcol.append(j)
+            hcol.append(i)
+            hval.append(h[i,j])
+            hval.append(h[i,j])
+    return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(len(indicies),len(indicies)))
