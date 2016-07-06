@@ -1,3 +1,4 @@
+#!/bin/python3
 import scipy as sp
 import scipy.linalg as spla
 import scipy.sparse.linalg as splinalg
@@ -61,10 +62,11 @@ E_old = 0
 convergence = 1e-10
 
 targetdetlist_sets = []
+#why are there only 8 electrons?
 coredetlist_sets = [(frozenset([1,2,3,4]),frozenset([1,2,3,4]))]
 C = {(frozenset([1,2,3,4]),frozenset([1,2,3,4])):1.0}
 coredetlist_sets=gen_dets_sets_truncated(nao,coredetlist_sets)
-print np.shape(coredetlist_sets)
+print(np.shape(coredetlist_sets))
 ndets = np.shape(coredetlist_sets)[0]
 print("Hartree-Fock Energy: ", E)
 print("")
@@ -92,6 +94,7 @@ while(np.abs(E - E_old) > convergence):
             pass
             #print(coredetlist_sets[i], " already in")
     print(A[(frozenset([0,1,2,3]),frozenset([0,1,2,3]))])
+    #what does this do?
     exit()
     #step 2
     targetdetlist_sets = []
