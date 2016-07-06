@@ -440,74 +440,15 @@ def gen_singles_doubles(det,norb):
 
 
 ##############################################ASCI funcs
-#TODO: only generate first and second excitations here
 def gen_dets_sets_truncated(norb,cdetlist_sets):
     """generate cdets determinants with a given number of spatial orbitals
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
-    return_list = []
+    return_list = copy.deepcopy(cdetlist_sets)
     for i in cdetlist_sets:
         return_list.extend(gen_singles_doubles(i,norb))
     return return_list
 
-    """ shit code
-    #TODO(shiv) this should only generate first and second exctiations but instead it generates all the shit and takes only the 1st and 2ndits bad
-    #we can't do large basis sets until this is fixed
-    adets_core=[]
-    bdets_core=[]
-    return_list = []
-    #loop over all subsets of size na from the list of orbitals
-    for i in cdetlist_sets:
-        adets_core.append(i[0])
-        bdets_core.append(i[1])
-        return_list.append(i)
-    for aset, bset in zip(adets_core,bdets_core):
-        aunocc = frozenset(range(norb)).difference(aset)
-        bunocc = frozenset(range(norb)).difference(bset)
-        for i in aset:
-            for j in aunocc:
-                return_list.append(((aset.difference({i}))|(aunocc.difference({j})),bset))
-                for k in aset.difference({i}):
-                    for l in aunocc.difference({j}):
-                        return_list.append(((aset.difference({i,k}))|(aunocc.difference({j,l})),bset))
-                for k in bset:
-                    for l in bunocc:
-                        return_list.append(((aset.difference({i,k}))|(aunocc.difference({j,l})),(bset.difference({k}))|(bunocc.difference({l}))))
-        for i in bset:
-            for j in bunocc:
-                return_list.append((aset,(bset.difference({i}))|(bunocc.difference({j}))))
-                for k in bset.difference({i}):
-                    for l in bunocc.difference({j}):
-                        return_list.append((aset,(bset.difference({i,k}))|(bunocc.difference({j,l}))))
-                for k in aset:
-                    for l in aunocc:
-                        return_list.append(((aset.difference({k}))|(aunocc.difference({l})),(bset.difference({i}))|(bunocc.difference({j}))))
-        #turn it into a set and then back to a list to remove duplicates this is most likely slow
-        #TODO:fix slowness
-    return list(set(return_list))
-    shit code
-    for alist in itertools.combinations(range(norb),na):
-        #start will all orbs unoccupied
-        adets.append(frozenset(alist))
-    if na==nb:
-        #if nb==na, make a copy of the alpha strings (beta will be the same)
-        bdets=adets[:]
-    else:
-        bdets=[]
-        for blist in itertools.combinations(range(norb),nb):
-            bdets.append(frozenset(blist))
-    #return all pairs of (alpha,beta) strings that are single and double excitations from HF
-    return_list = []
-    for i in adets:
-        for j in bdets:
-            for k in cdetlist_sets:
-                if n_excit_sets(k,(i,j)) in (0,1,2) and (i,j) not in return_list:
-                    return_list.append((i,j))
-    for k in cdetlist_sets:
-        if k not in return_list:
-            return_list.append((i,j))
-    return return_list
-    """
 def construct_hamiltonian(ndets,coredetlist_sets,h1e,eri):
     hrow = []
     hcol = []
@@ -541,12 +482,12 @@ def get_smaller_hamiltonian(h,indicies):
     for i in range(len(indicies)):
         hrow.append(i)
         hcol.append(i)
-        hval.append(h[i,i])
+        hval.append(h[indicies[i],indicies[i]])
         for j in range(i+1,len(indicies)):
             hrow.append(i)
             hrow.append(j)
             hcol.append(j)
             hcol.append(i)
-            hval.append(h[i,j])
-            hval.append(h[i,j])
+            hval.append(h[indicies[i],indicies[j]])
+            hval.append(h[indicies[i],indicies[j]])
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(len(indicies),len(indicies)))

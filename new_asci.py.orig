@@ -70,16 +70,29 @@ ndets = np.shape(coredetlist_sets)[0]
 print("Hartree-Fock Energy: ", E)
 print("")
 while(np.abs(E - E_old) > convergence):
-    print("Core Dets: ",cdets)
+    print("Core Dets: ",np.size(coredetlist_sets))
     print("Exitation Dets: ",ndets)
-    print("Target Dets: ",tdets)
+    print("Target Dets: ",np.size(targetdetlist_sets))
     #step 1
     indicies = []
     for i in coredetlist_sets:
-        indicies.extend(np.where(fulldetlist_sets == i))
+        index = 0
+        while(fulldetlist_sets[index] != i):
+            index+=1
+        indicies.append(index)
+        #indicies.extend(np.where(fulldetlist_sets == i))
+    #print indicies
+    #print ((frozenset(range(Na)),frozenset(range(Nb))) in coredetlist_sets) #test to see if hf det was in fulldetlist_sets
     core_ham = get_smaller_hamiltonian(full_hamiltonian,indicies)
-    #STOPPING HERE FOR NOW BECAUSE I HAVE GROUP MEETING
+    #print core_ham[len(indicies)-1,len(indicies)-1] == full_hamiltonian[len(indicies)-1,len(indicies)-1]
+    #print(np.where(fulldetlist_sets == (frozenset(range(Na)),frozenset(range(Nb)))))
     A = {}
+    #for core_amp in C.keys():
+     #   j = np.where(coredetlist_set == core_amp)
+      #  for i in range(cdets):
+       #     if i != j:
+        #        A
+         #LOOP COULD BE WRITTEN LIKE THIS ^ but that requires some thought
     for i in range(ndets):
         temp = 0.0
         for j in range(cdets):
@@ -95,17 +108,19 @@ while(np.abs(E - E_old) > convergence):
         except:
             pass
             #print(coredetlist_sets[i], " already in")
-    print(A[(frozenset([0,1,2,3,4]),frozenset([0,1,2,3,4]))])
-    exit()
+    #print(A)
     #step 2
     targetdetlist_sets = []
     for i in sorted(A, key=A.get, reverse=True)[0:tdets]:
         targetdetlist_sets.append(i)
-    hrow = []
-    hcol = []
-    hval = []
     #step 3
-    target_ham=construct_hamiltonian(tdets,targetdetlist_sets,h1e,eri)
+    indicies = []
+    for i in targetdetlist_sets:
+        index = 0
+        while(fulldetlist_sets[index] != i):
+            index+=1
+        indicies.append(index)
+    target_ham = get_smaller_hamiltonian(full_hamiltonian,indicies)
     eig_vals,eig_vecs = sp.sparse.linalg.eigsh(target_ham,k=2*printroots)
     eig_vals_sorted = np.sort(eig_vals)[:printroots] + mol.energy_nuc()
     E_old = E
@@ -119,7 +134,7 @@ while(np.abs(E - E_old) > convergence):
     C = {}
     for i,j in zip(coredetlist_sets,np.argsort(np.abs(amplitudes))[::-1][0:cdets]):
         C[i] = j
-    coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
+    coredetlist_sets=gen_dets_sets_truncated(nao,coredetlist_sets)
     ndets = np.shape(coredetlist_sets)[0]
     print("")
 eig_vals_gamess = [-75.0129802245,
