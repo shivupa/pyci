@@ -404,6 +404,13 @@ def calc_hij_double_sets(idet,jdet,hcore,eri):
     return hij
 
 def get_excitations(det,norb,aexc,bexc):
+    """
+    usage: get_excitations(det,norb,aexc,bexc)
+    returns a list of determinants connected to det with alpha(beta) excitation level aexc(bexc)
+    norb is the number of spatial orbitals
+    det should be a pair (2-tuple or list) or sets of occupied orbital indices)
+    returned determinants will be 2-tuples of frozensets of occupied indices (alpha and beta)
+    """
     aocc=det[0]
     bocc=det[1]
     orbs=frozenset(range(norb))
