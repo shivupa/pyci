@@ -90,7 +90,7 @@ while(np.abs(E - E_old) > convergence):
         except:
             pass
             #print(coredetlist_sets[i], " already in")
-    print A[(frozenset([0,1,2,3]),frozenset([0,1,2,3]))]
+    print(A[(frozenset([0,1,2,3]),frozenset([0,1,2,3]))])
     exit()
     #step 2
     targetdetlist_sets = []
