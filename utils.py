@@ -422,14 +422,15 @@ def get_excitations(det,norb,aexc,bexc):
             bdets.append(bocc - set(iocc) | set(ivirt))
     return [(i,j) for i in adets for j in bdets]
 
-    
-    
+
+
 ##############################################ASCI funcs
 #TODO: only generate first and second excitations here
 def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets):
     """generate cdets determinants with a given number of spatial orbitals
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
+    """ Shit code
     #TODO(shiv) this should only generate first and second exctiations but instead it generates all the shit and takes only the 1st and 2ndits bad
     #we can't do large basis sets until this is fixed
     adets_core=[]
@@ -464,7 +465,7 @@ def gen_dets_sets_truncated(norb,na,nb,cdetlist_sets):
         #turn it into a set and then back to a list to remove duplicates this is most likely slow
         #TODO:fix slowness
     return list(set(return_list))
-    """ shit code
+    shit code
     for alist in itertools.combinations(range(norb),na):
         #start will all orbs unoccupied
         adets.append(frozenset(alist))
