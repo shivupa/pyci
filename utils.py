@@ -422,6 +422,14 @@ def get_excitations(det,norb,aexc,bexc):
             bdets.append(bocc - set(iocc) | set(ivirt))
     return [(i,j) for i in adets for j in bdets]
 
+def gen_singles(det,norb):
+    return get_excitations(det,norb,1,0) + get_excitations(det,norb,0,1)
+
+def gen_doubles(det,norb):
+    return get_excitations(det,norb,2,0) + get_excitations(det,norb,0,2) + get_excitations(det,norb,1,1)
+
+def gen_singles_doubles(det,norb):
+    return gen_singles(det,norb) + gen_doubles(det,norb)
 
 
 ##############################################ASCI funcs
