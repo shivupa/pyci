@@ -43,6 +43,7 @@ cisolver = fci.FCI(mol, c)
 efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
 h1e = reduce(np.dot, (c.T, myhf.get_hcore(), c))
 eri = ao2mo.kernel(mol, c)
+threshold = 1e-13 #threshold for hii and hij
 #use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
 #make full 4-index eris in MO basis (only for testing idx2)
 num_orbs=2*nao
@@ -58,9 +59,10 @@ hval=[]
 for i in range(ndets):
     idet=fulldetlist_sets[i]
     hii = calc_hii_sets(idet,h1e,eri)
-    hrow.append(i)
-    hcol.append(i)
-    hval.append(hii)
+    if abs(hii)>threshold: #we probably don't need this
+        hrow.append(i)
+        hcol.append(i)
+        hval.append(hii)
     for j in range(i+1,ndets):
         jdet=fulldetlist_sets[j]
         nexc_ij = n_excit_sets(idet,jdet)
@@ -69,12 +71,13 @@ for i in range(ndets):
                 hij = calc_hij_single_sets(idet,jdet,h1e,eri)
             else:
                 hij = calc_hij_double_sets(idet,jdet,h1e,eri)
-            hrow.append(i)
-            hrow.append(j)
-            hcol.append(j)
-            hcol.append(i)
-            hval.append(hij)
-            hval.append(hij)
+            if abs(hij)>threshold:
+                hrow.append(i)
+                hrow.append(j)
+                hcol.append(j)
+                hcol.append(i)
+                hval.append(hij)
+                hval.append(hij)
 fullham=sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 eig_vals,eig_vecs = sp.sparse.linalg.eigsh(fullham,k=2*printroots)
 eig_vals_sorted = sorted(eig_vals)[:printroots] + mol.energy_nuc()
