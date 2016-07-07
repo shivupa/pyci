@@ -619,3 +619,7 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
         print(i)
+
+
+if __name__ == "__main__":
+    print("PYCI utils file. This file was not meant to be run independently.")
