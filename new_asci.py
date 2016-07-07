@@ -73,13 +73,13 @@ print("Hartree-Fock Energy: ", E)
 print("")
 while(np.abs(E - E_old) > convergence):
     print("Core Dets: ",cdets)
-    print("Exitation Dets: ",ndets)
+    print("Excitation Dets: ",ndets)
     print("Target Dets: ",tdets)
     #step 1
-    indicies = []
+    indices = []
     for i in coredetlist_sets:
-        indicies.extend(np.where(fulldetlist_sets == i))
-    core_ham = get_smaller_hamiltonian(full_hamiltonian,indicies)
+        indices.extend(np.where(fulldetlist_sets == i))
+    core_ham = get_smaller_hamiltonian(full_hamiltonian,indices)
     #STOPPING HERE FOR NOW BECAUSE I HAVE GROUP MEETING
     A = {}
     for i in range(ndets):

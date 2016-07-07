@@ -516,19 +516,19 @@ def getsmallham(dets,hamdict):
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 
 
-def get_smaller_hamiltonian(h,indicies):
+def get_smaller_hamiltonian(h,indices):
     hrow = []
     hcol = []
     hval = []
-    for i in range(len(indicies)):
+    for i in range(len(indices)):
         hrow.append(i)
         hcol.append(i)
-        hval.append(h[indicies[i],indicies[i]])
-        for j in range(i+1,len(indicies)):
+        hval.append(h[indices[i],indices[i]])
+        for j in range(i+1,len(indices)):
             hrow.append(i)
             hrow.append(j)
             hcol.append(j)
             hcol.append(i)
-            hval.append(h[indicies[i],indicies[j]])
-            hval.append(h[indicies[i],indicies[j]])
-    return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(len(indicies),len(indicies)))
+            hval.append(h[indices[i],indices[j]])
+            hval.append(h[indices[i],indices[j]])
+    return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(len(indices),len(indices)))
