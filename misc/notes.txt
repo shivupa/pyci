@@ -20,8 +20,6 @@ decisions to make (and general observations):
       if we exclusively use dictionaries/sets (of occupied orbitals), we could probably use set operations to do everything we need to do. (if we want to use these sets as dictionary keys, we'll have to use frozensets (dictionary keys need to be immutable))
 
 
-could pyscf.fci.cistring.gen_linkstr_index(orb_list, nocc, strs=None) be used?
-
 EQUATION 4 IMPLEMENTATION:
     the A_{i} vector in equation 4 contains all of the dets that are connected to the core space; we will need this whole list.
     in equation 4, we need to evaluate H_{ij}C_{j} / (H_{ii} - E) for each det j in the core and det i in the space of A_{i}

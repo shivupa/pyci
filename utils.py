@@ -582,7 +582,6 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
         targetdetset=set()
         for idet in coreset:
             targetdetset |= set(gen_singles_doubles(idet,nao))
-        #targetdetset |= coreset
         A = dict.fromkeys(targetdetset, 0.0)
         for idet in coreset:
             for jdet in gen_singles_doubles(idet,nao):
@@ -590,17 +589,12 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
         for idet in targetdetset:
             A[idet] /= (hamdict[frozenset((idet))] - E_old)
         for idet in coreset:
-            #if idet in A:
-                #A[idet] += C[idet]
-            #else:
-                #A[idet] = C[idet]
-            A[idet] = C[idet]
+            if idet in A:
+                if A[idet] < C[idet]: # replace with the biggest again
+                    A[idet] = C[idet]
+            else:
+                A[idet] = C[idet]
         A_sorted = sorted(list(A.items()),key=lambda i: -abs(i[1]))
-        #if tdets > len(A):
-        #    tdets_tmp = len(A)
-        #else:
-        #    tdets_tmp = tdets
-        #A_truncated = A_sorted[:tdets_tmp]
         A_truncated = A_sorted[:tdets]
         print("Target Dets: ",len(A_truncated))
         A_dets = [i[0] for i in A_truncated]
