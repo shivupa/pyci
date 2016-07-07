@@ -29,9 +29,9 @@ mol = gto.M(
 # Number of eigenvalues desired
 printroots=4
 # size of core space
-cdets = 50
+cdets = 500
 # size of target space
-tdets = 100
+tdets = 600
 #############
 # INITIALIZE
 #############
