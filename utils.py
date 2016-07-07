@@ -565,28 +565,24 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
 
     E_old = 0.0
     E_new = E_hf
-    conv = 1e-10
+    convergence = 1e-3
     hfdet = (frozenset(range(Na)),frozenset(range(Nb)))
     targetdetset = set()
     coreset = {hfdet}
     C = {hfdet:1.0}
-
-    #coredetlist_sets=gen_dets_sets_truncated(nao,coredetlist_sets)
-    #print(np.shape(coredetlist_sets))
-    #ndets = np.shape(coredetlist_sets)[0]
     print("Hartree-Fock Energy: ", E_hf)
     print("")
-    iter_num = 0
-    while(np.abs(E_new - E_old) > conv or iter_num < iter_min):
-        iter_num += 1
+    it_num = 0
+    while(np.abs(E_new - E_old) > convergence):
+        print("is hfdet in coreset? ", hfdet in coreset)
+        it_num += 1
         E_old = E_new
-        #print("Core Dets: ",cdets)
-        #print("Excitation Dets: ",ndets)
-        #print("Target Dets: ",tdets)
-            #step 1
+        print("Core Dets: ",len(coreset))
+        #step 1
         targetdetset=set()
         for idet in coreset:
             targetdetset |= set(gen_singles_doubles(idet,nao))
+        #targetdetset |= coreset
         A = dict.fromkeys(targetdetset, 0.0)
         for idet in coreset:
             for jdet in gen_singles_doubles(idet,nao):
@@ -594,23 +590,34 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
         for idet in targetdetset:
             A[idet] /= (hamdict[frozenset((idet))] - E_old)
         for idet in coreset:
-            if idet in A:
-                A[idet] += C[idet]
-            else:
-                A[idet] = C[idet]
+            #if idet in A:
+                #A[idet] += C[idet]
+            #else:
+                #A[idet] = C[idet]
+            A[idet] = C[idet]
         A_sorted = sorted(list(A.items()),key=lambda i: -abs(i[1]))
+        #if tdets > len(A):
+        #    tdets_tmp = len(A)
+        #else:
+        #    tdets_tmp = tdets
+        #A_truncated = A_sorted[:tdets_tmp]
         A_truncated = A_sorted[:tdets]
+        print("Target Dets: ",len(A_truncated))
         A_dets = [i[0] for i in A_truncated]
         targetham = getsmallham(A_dets,hamdict)
         eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
         eig_vals_sorted = np.sort(eig_vals)[:printroots]
         E_new = eig_vals_sorted[0]
-        print("Iteration {:} Energy: ".format(iter_num), E_new + E_nuc)
+        print("Iteration {:} Energy: ".format(it_num), E_new + E_nuc)
+        #step 4
         amplitudes = eig_vecs[:,np.argsort(eig_vals)[0]]
         newdet = [i for i in zip(A_dets,amplitudes)]
         C = {}
-        for i in sorted(newdet,key=lambda j: -abs(j[1])):
+        for i in sorted(newdet,key=lambda j: -abs(j[1]))[:cdets]:
             C[i[0]] = i[1]
+        if sorted(newdet,key=lambda j: -abs(j[1]))[0][0] != hfdet:
+            print("Biggest Contributor is NOT HF det ", sorted(newdet,key=lambda j: -abs(j[1]))[0])
+        coreset = set(C.keys())
         print("")
     #   print("first {:} pyci eigvals vs PYSCF eigvals".format(printroots))
     #   for i,j in zip(eig_vals_sorted + E_nuc, efci):

@@ -29,4 +29,4 @@ mol = gto.M(
     symmetry=True
 )
 
-asci(mol,50,100,iter_min=10)
+asci(mol,500,1000,iter_min=10)
