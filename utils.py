@@ -540,7 +540,14 @@ def get_smaller_hamiltonian(h,indices):
             hval.append(h[indices[i],indices[j]])
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(len(indices),len(indices)))
 
-def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
+def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0):
+    print("PYCI")
+    print("method: ASCI")
+    print("convergence: ", convergence)
+    print("Core Space size: ",cdets)
+    print("Target Space size: ",tdets)
+    print("Number of eigenvalues: ",printroots)
+    print("")
     Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
     E_nuc = mol.energy_nuc()
     nao = mol.nao_nr()
@@ -565,19 +572,18 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
 
     E_old = 0.0
     E_new = E_hf
-    convergence = 1e-3
     hfdet = (frozenset(range(Na)),frozenset(range(Nb)))
     targetdetset = set()
     coreset = {hfdet}
     C = {hfdet:1.0}
-    print("Hartree-Fock Energy: ", E_hf)
-    print("")
+    print("\nHartree-Fock Energy: ", E_hf)
+    print("\nBeginning Iterations\n")
     it_num = 0
     while(np.abs(E_new - E_old) > convergence):
-        print("is hfdet in coreset? ", hfdet in coreset)
+        #print("is hfdet in coreset? ", hfdet in coreset)
         it_num += 1
         E_old = E_new
-        print("Core Dets: ",len(coreset))
+        #print("Core Dets: ",len(coreset))
         #step 1
         targetdetset=set()
         for idet in coreset:
@@ -590,13 +596,13 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
             A[idet] /= (hamdict[frozenset((idet))] - E_old)
         for idet in coreset:
             if idet in A:
-                if A[idet] < C[idet]: # replace with the biggest again
+                if abs(A[idet]) < abs(C[idet]): # replace with the biggest again
                     A[idet] = C[idet]
             else:
                 A[idet] = C[idet]
         A_sorted = sorted(list(A.items()),key=lambda i: -abs(i[1]))
         A_truncated = A_sorted[:tdets]
-        print("Target Dets: ",len(A_truncated))
+        #print("Target Dets: ",len(A_truncated))
         A_dets = [i[0] for i in A_truncated]
         targetham = getsmallham(A_dets,hamdict)
         eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
@@ -619,7 +625,7 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
         print(i)
-
+    print("Completed!")
 
 if __name__ == "__main__":
     print("\nPYCI utils file. This file was not meant to be run independently.")
