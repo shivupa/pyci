@@ -5,7 +5,7 @@ decisions to make (and general observations):
       for restricted references, almost certainly easier to use separate alpha/beta objects
       i haven't given much thought to unrestricted references and how one would store integrals (the naive way of storing eris would have lots of zeros due to spin asymmetry; maybe one array with alpha eris, one array with beta eris, and one with mixed?; in this case, separate alpha/beta objects would probably make sense.  we could also try to do clever things with storage and access of eris so that we wouldn't have to exploit symmetry in how the array is structured, only in how the elements are accessed.)
       The most compact way to store eris would be as a 1D array (or several 1D arrays), so we would make some lookup table/function to easily access them using 4-index notation.  This lookup could also incorporate spin symmetry here, so even in the restricted case, we could just naively loop over spinorbitals and let the lookup function handle everything. This is in contrast to the original (attempted) implementation for a restricted reference, which separately looped over doubly occupied, singly-occupied(alpha), and singly-occupied(beta) orbitals.
-      
+
     strings, ints, or lists(or tuples or dicts):
       it might make sense to convert between binary-type representations (e.g. "111101100" or the equivalent integer (492)) and lists of occupied orbitals (e.g. [0,1,2,3,5,6] for the given binary-type example)
       sums over occupied orbitals might be easier with lists of occupied orbitals than with binary-type representations
@@ -26,9 +26,9 @@ EQUATION 4 IMPLEMENTATION:
     the A_{i} vector in equation 4 contains all of the dets that are connected to the core space; we will need this whole list.
     in equation 4, we need to evaluate H_{ij}C_{j} / (H_{ii} - E) for each det j in the core and det i in the space of A_{i}
     if j is not connected to i, we don't need to evaluate H_{ij}C_{j} (it will be equal to zero)
-    
+
     we can either generate a list of connected dets for each core det, then do this double loop (core dets outer loop, connected dets inner loop)
-    OR 
+    OR
     we could generate a list of core dets connected to each det in A_{i} (or in the whole space) and do the outer loop over dets in A_{i} and the inner loop over core dets that are connected to det i
 
     the former approach seems to make more sense, as it would be easier to just generate the dets connected to j than it would be to loop over all dets (i) and then find the set of dets connected to det i that are also in the core space.
@@ -38,10 +38,14 @@ EQUATION 4 IMPLEMENTATION:
         2. for each det in the core space, generate some iterable structure containing all dets connected to that det
         3a. outer loop over each det j in the core space
         3b. inner loop over each det i connected to core det j (if we do step 2 here, we'll only have to store one such list at a time)
-        3c. inside the inner loop, add H_{ij} * C_{j} to the amplitude associated with det i (in the dictionary created in step 1) 
+        3c. inside the inner loop, add H_{ij} * C_{j} to the amplitude associated with det i (in the dictionary created in step 1)
         4. after this double loop, for each det i in the dictionary, divide the value by (H_{ii}-E)
         5?. (not sure about this part) add in the initial weights of all core dets.  If a core det is already in the dictionary, just update the value.  If a core det is not in the dictionary, add a new entry for it.
 
 
 Something needs to be done about generating the full hamiltonian. I think that we should generate hamiltonian elements on the fly for any new determinants added and save those that are generated. The full space becomes much too large too quickly.
-
+I think i get how to do this:
+    hamdict starts empty
+    when we need hammy elements try to pull from hamdict or
+    generate elements on the fly with keys as usual (idet) for hii and (idet,jdet) for hij
+    and put these in the hamdict

@@ -541,17 +541,16 @@ def get_smaller_hamiltonian(h,indices):
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(len(indices),len(indices)))
 
 def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
-
     Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
     E_nuc = mol.energy_nuc()
     nao = mol.nao_nr()
     myhf = scf.RHF(mol)
     E_hf = myhf.kernel()
     mo_coefficients = myhf.mo_coeff
-#    print("starting pyscf FCI")
-#    cisolver = fci.FCI(mol, mo_coefficients)
-#    efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
-#    print("FCI done")
+    #print("starting pyscf FCI")
+    #cisolver = fci.FCI(mol, mo_coefficients)
+    #efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
+    #print("FCI done")
     h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
     print("transforming eris")
     eri = ao2mo.kernel(mol, mo_coefficients)
@@ -559,8 +558,8 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
     #make full 4-index eris in MO basis (only for testing idx2)
     print("generating all determinants")
     fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
-#    ndets=len(fulldetlist_sets)
-#    full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
+    #ndets=len(fulldetlist_sets)
+    #full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
     print("constructing full Hamiltonian")
     hamdict = construct_ham_dict(fulldetlist_sets,h1e,eri)
 
@@ -622,4 +621,4 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
 
 
 if __name__ == "__main__":
-    print("PYCI utils file. This file was not meant to be run independently.")
+    print("\nPYCI utils file. This file was not meant to be run independently.")

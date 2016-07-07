@@ -15,7 +15,6 @@ from utils import *
 #############
 # INPUT
 #############
-#TODO: implement function that finds particles/holes based on set operations (will be easier with aocc,bocc lists of indices instead of docc,aocc(single),bocc(single)
 np.set_printoptions(precision=4,suppress=True)
 # Molecule Definition
 mol = gto.M(
@@ -37,15 +36,8 @@ nao=mol.nao_nr()
 myhf = scf.RHF(mol)
 E = myhf.kernel()
 mo_coefficients = myhf.mo_coeff
-#if you change the sign of these two orbitals, the hamiltonian matrix elements agree with those from GAMESS
-#c.T[2]*=-1
-#c.T[5]*=-1
-cisolver = fci.FCI(mol, mo_coefficients)
-efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
 h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
 eri = ao2mo.kernel(mol, mo_coefficients)
-#use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
-#make full 4-index eris in MO basis (only for testing idx2)
 num_orbs=2*nao
 num_occ = mol.nelectron
 num_virt = num_orbs - num_occ
@@ -53,16 +45,10 @@ fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
 ndets=len(fulldetlist_sets)
 full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
 
-
-
-
-
 cdets = 50
 tdets = 100
 E_old = 0
 convergence = 1e-10
-
-targetdetlist_sets = []
 #why are there only 8 electrons?
 coredetlist_sets = [(frozenset([1,2,3,4]),frozenset([1,2,3,4]))]
 C = {(frozenset([1,2,3,4]),frozenset([1,2,3,4])):1.0}
@@ -124,10 +110,15 @@ while(np.abs(E - E_old) > convergence):
     coredetlist_sets=gen_dets_sets_truncated(nao,Na,Nb,coredetlist_sets)
     ndets = np.shape(coredetlist_sets)[0]
     print("")
+
+
 eig_vals_gamess = [-75.0129802245,
                    -74.7364625517,
                    -74.6886742417,
                    -74.6531877287]
-print("first {:} pyci eigvals vs PYSCF eigvals vs GAMESS eigvals".format(printroots))
+
+cisolver = fci.FCI(mol, mo_coefficients)
+efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
+print("first {:} PYCI eigvals vs FCI PYSCF eigvals vs FCI GAMESS eigvals".format(printroots))
 for i,j,k in zip(eig_vals_sorted, efci, eig_vals_gamess):
     print(i,j,k)
