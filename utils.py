@@ -532,3 +532,77 @@ def get_smaller_hamiltonian(h,indices):
             hval.append(h[indices[i],indices[j]])
             hval.append(h[indices[i],indices[j]])
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(len(indices),len(indices)))
+
+def asci(mol,cdets,tdets,conv=1e-6,printroots=4):
+
+    Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
+    E_nuc = mol.energy_nuc()
+    nao = mol.nao_nr()
+    myhf = scf.RHF(mol)
+    E_hf = myhf.kernel()
+    mo_coefficients = myhf.mo_coeff
+    cisolver = fci.FCI(mol, mo_coefficients)
+    efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
+    h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
+    eri = ao2mo.kernel(mol, mo_coefficients)
+    #use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
+    #make full 4-index eris in MO basis (only for testing idx2)
+    fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
+    ndets=len(fulldetlist_sets)
+    full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
+    hamdict = construct_ham_dict(fulldetlist_sets,h1e,eri)
+    
+    cdets = 50
+    tdets = 100
+    E_old = 0.0
+    E_new = E_hf
+    conv = 1e-10
+    hfdet = (frozenset(range(Na)),frozenset(range(Nb)))
+    targetdetset = set()
+    coreset = {hfdet}
+    C = {hfdet:1.0}
+    
+    #coredetlist_sets=gen_dets_sets_truncated(nao,coredetlist_sets)
+    #print(np.shape(coredetlist_sets))
+    #ndets = np.shape(coredetlist_sets)[0]
+    print("Hartree-Fock Energy: ", E_hf)
+    print("")
+    it_num = 0
+    while(np.abs(E_new - E_old) > conv):
+        it_num += 1
+        E_old = E_new
+        print("Core Dets: ",cdets)
+        print("Excitation Dets: ",ndets)
+        print("Target Dets: ",tdets)
+        #step 1
+        targetdetset=set()
+        for idet in coreset:
+            targetdetset |= set(gen_singles_doubles(idet,nao))
+        A = dict.fromkeys(targetdetset, 0.0)
+        for idet in coreset:
+            for jdet in gen_singles_doubles(idet,nao):
+                A[jdet] += hamdict[frozenset([idet,jdet])] * C[idet]
+        for idet in targetdetset:
+            A[idet] /= (hamdict[frozenset((idet))] - E_old)
+        for idet in coreset:
+            if idet in A:
+                A[idet] += C[idet]
+            else:
+                A[idet] = C[idet]
+        A_sorted = sorted(list(A.items()),key=lambda i: -abs(i[1]))
+        A_truncated = A_sorted[:tdets]
+        A_dets = [i[0] for i in A_truncated]
+        targetham = getsmallham(A_dets,hamdict)
+        eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
+        eig_vals_sorted = np.sort(eig_vals)[:printroots] 
+        E_new = eig_vals_sorted[0]
+        print("Iteration {:} Energy: ".format(it_num), E_new + E_nuc)
+        amplitudes = eig_vecs[:,np.argsort(eig_vals)[0]]
+        newdet = [i for i in zip(A_dets,amplitudes)]
+        C = {}
+        for i in sorted(newdet,key=lambda j: -abs(j[1])):
+            C[i[0]] = i[1]
+        print("")
+    print("first {:} pyci eigvals vs PYSCF eigvals".format(printroots))
+    for i,j in zip(eig_vals_sorted + E_nuc, efci):
+        print(i,j)
