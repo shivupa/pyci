@@ -116,7 +116,7 @@ while(np.abs(E - E_old) > convergence):
     for i in sorted(A, key=A.get, reverse=True)[0:tdets]:
         targetdetlist_sets.append(i)
     #step 3
-    print tdets,len(targetdetlist_sets)
+    print(tdets,len(targetdetlist_sets))
     indicies = []
     for i in targetdetlist_sets:
         index = 0
