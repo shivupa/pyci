@@ -61,6 +61,7 @@ print("Hartree-Fock Energy: ", E_hf)
 print("")
 it_num = 0
 while(np.abs(E_new - E_old) > convergence):
+    print("is hfdet in coreset? ", hfdet in coreset)
     it_num += 1
     E_old = E_new
     print("Core Dets: ",len(coreset))
@@ -69,7 +70,7 @@ while(np.abs(E_new - E_old) > convergence):
     targetdetset=set()
     for idet in coreset:
         targetdetset |= set(gen_singles_doubles(idet,nao))
-    targetdetset |= coreset
+    #targetdetset |= coreset
     A = dict.fromkeys(targetdetset, 0.0)
     for idet in coreset:
         for jdet in gen_singles_doubles(idet,nao):
@@ -82,15 +83,14 @@ while(np.abs(E_new - E_old) > convergence):
         else:
             A[idet] = C[idet]
     A_sorted = sorted(list(A.items()),key=lambda i: -abs(i[1]))
-    print("Target Dets: ",len(targetdetset))
     #if tdets > len(A):
     #    tdets_tmp = len(A)
     #else:
     #    tdets_tmp = tdets
     #A_truncated = A_sorted[:tdets_tmp]
     A_truncated = A_sorted[:tdets]
+    print("Target Dets: ",len(A_truncated))
     A_dets = [i[0] for i in A_truncated]
-    print(len(A_dets))
     targetham = getsmallham(A_dets,hamdict)
     eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
     eig_vals_sorted = np.sort(eig_vals)[:printroots]
@@ -100,10 +100,11 @@ while(np.abs(E_new - E_old) > convergence):
     amplitudes = eig_vecs[:,np.argsort(eig_vals)[0]]
     newdet = [i for i in zip(A_dets,amplitudes)]
     C = {}
-    coreset = set()
     for i in sorted(newdet,key=lambda j: -abs(j[1]))[:cdets]:
         C[i[0]] = i[1]
-        coreset.add(i[0])
+    if sorted(newdet,key=lambda j: -abs(j[1]))[0][0] != hfdet:
+        print("Biggest Contributor is NOT HF det ", sorted(newdet,key=lambda j: -abs(j[1]))[0])
+    coreset = set(C.keys())
     print("")
 
 
