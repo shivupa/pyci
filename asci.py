@@ -65,7 +65,6 @@ while(np.abs(E_new - E_old) > convergence):
     it_num += 1
     E_old = E_new
     print("Core Dets: ",len(coreset))
-
     #step 1
     targetdetset=set()
     for idet in coreset:
@@ -78,10 +77,11 @@ while(np.abs(E_new - E_old) > convergence):
     for idet in targetdetset:
         A[idet] /= (hamdict[frozenset((idet))] - E_old)
     for idet in coreset:
-        if idet in A:
-            A[idet] += C[idet]
-        else:
-            A[idet] = C[idet]
+        #if idet in A:
+            #A[idet] += C[idet]
+        #else:
+            #A[idet] = C[idet]
+        A[idet] = C[idet]
     A_sorted = sorted(list(A.items()),key=lambda i: -abs(i[1]))
     #if tdets > len(A):
     #    tdets_tmp = len(A)
