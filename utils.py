@@ -493,6 +493,29 @@ def construct_hamiltonian(ndets,coredetlist_sets,h1e,eri):
                 hval.append(hij)
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 
+def getsmallham(dets,hamdict):
+    hrow=[]
+    hcol=[]
+    hval=[]
+    ndets=len(dets)
+    for i in range(ndets):
+        idet = dets[i]
+        hrow.append(i)
+        hcol.append(i)
+        hval.append(hamdict[frozenset((idet))])
+        for j in range(i+1,ndets):
+            jdet = dets[j]
+            if frozenset((idet,jdet)) in hamdict:
+                hrow.append(i)
+                hrow.append(j)
+                hcol.append(j)
+                hcol.append(i)
+                hij = hamdict[frozenset((idet,jdet))]
+                hval.append(hij)
+                hval.append(hij)
+    return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
+
+
 def get_smaller_hamiltonian(h,indicies):
     hrow = []
     hcol = []
