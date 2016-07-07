@@ -561,9 +561,9 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
     fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
 #    ndets=len(fulldetlist_sets)
 #    full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
-    print("constructing Hamiltonian")
+    print("constructing full Hamiltonian")
     hamdict = construct_ham_dict(fulldetlist_sets,h1e,eri)
-    
+
     E_old = 0.0
     E_new = E_hf
     conv = 1e-10
@@ -571,7 +571,7 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
     targetdetset = set()
     coreset = {hfdet}
     C = {hfdet:1.0}
-    
+
     #coredetlist_sets=gen_dets_sets_truncated(nao,coredetlist_sets)
     #print(np.shape(coredetlist_sets))
     #ndets = np.shape(coredetlist_sets)[0]
@@ -581,10 +581,10 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
     while(np.abs(E_new - E_old) > conv or iter_num < iter_min):
         iter_num += 1
         E_old = E_new
-#        print("Core Dets: ",cdets)
-#        print("Excitation Dets: ",ndets)
-#        print("Target Dets: ",tdets)
-        #step 1
+        #print("Core Dets: ",cdets)
+        #print("Excitation Dets: ",ndets)
+        #print("Target Dets: ",tdets)
+            #step 1
         targetdetset=set()
         for idet in coreset:
             targetdetset |= set(gen_singles_doubles(idet,nao))
@@ -604,7 +604,7 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
         A_dets = [i[0] for i in A_truncated]
         targetham = getsmallham(A_dets,hamdict)
         eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
-        eig_vals_sorted = np.sort(eig_vals)[:printroots] 
+        eig_vals_sorted = np.sort(eig_vals)[:printroots]
         E_new = eig_vals_sorted[0]
         print("Iteration {:} Energy: ".format(iter_num), E_new + E_nuc)
         amplitudes = eig_vecs[:,np.argsort(eig_vals)[0]]
@@ -613,9 +613,9 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
         for i in sorted(newdet,key=lambda j: -abs(j[1])):
             C[i[0]] = i[1]
         print("")
-#   print("first {:} pyci eigvals vs PYSCF eigvals".format(printroots))
-#   for i,j in zip(eig_vals_sorted + E_nuc, efci):
-#       print(i,j)
+    #   print("first {:} pyci eigvals vs PYSCF eigvals".format(printroots))
+    #   for i,j in zip(eig_vals_sorted + E_nuc, efci):
+    #       print(i,j)
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
         print(i)

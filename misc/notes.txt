@@ -43,5 +43,5 @@ EQUATION 4 IMPLEMENTATION:
         5?. (not sure about this part) add in the initial weights of all core dets.  If a core det is already in the dictionary, just update the value.  If a core det is not in the dictionary, add a new entry for it.
 
 
-Kevin
-Newasci.py.orig is the most updated file use that. newasci.py is trash
+Something needs to be done about generating the full hamiltonian. I think that we should generate hamiltonian elements on the fly for any new determinants added and save those that are generated. The full space becomes much too large too quickly.
+
