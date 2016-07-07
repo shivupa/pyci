@@ -41,3 +41,7 @@ EQUATION 4 IMPLEMENTATION:
         3c. inside the inner loop, add H_{ij} * C_{j} to the amplitude associated with det i (in the dictionary created in step 1) 
         4. after this double loop, for each det i in the dictionary, divide the value by (H_{ii}-E)
         5?. (not sure about this part) add in the initial weights of all core dets.  If a core det is already in the dictionary, just update the value.  If a core det is not in the dictionary, add a new entry for it.
+
+
+Kevin
+Newasci.py.orig is the most updated file use that. newasci.py is trash
