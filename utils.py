@@ -540,7 +540,7 @@ def get_smaller_hamiltonian(h,indices):
             hval.append(h[indices[i],indices[j]])
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(len(indices),len(indices)))
 
-def asci(mol,cdets,tdets,conv=1e-6,printroots=4):
+def asci(mol,cdets,tdets,conv=1e-6,printroots=4,iter_min=0):
 
     Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
     E_nuc = mol.energy_nuc()
@@ -577,9 +577,9 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4):
     #ndets = np.shape(coredetlist_sets)[0]
     print("Hartree-Fock Energy: ", E_hf)
     print("")
-    it_num = 0
-    while(np.abs(E_new - E_old) > conv):
-        it_num += 1
+    iter_num = 0
+    while(np.abs(E_new - E_old) > conv or iter_num < iter_min):
+        iter_num += 1
         E_old = E_new
 #        print("Core Dets: ",cdets)
 #        print("Excitation Dets: ",ndets)
@@ -606,7 +606,7 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4):
         eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
         eig_vals_sorted = np.sort(eig_vals)[:printroots] 
         E_new = eig_vals_sorted[0]
-        print("Iteration {:} Energy: ".format(it_num), E_new + E_nuc)
+        print("Iteration {:} Energy: ".format(iter_num), E_new + E_nuc)
         amplitudes = eig_vecs[:,np.argsort(eig_vals)[0]]
         newdet = [i for i in zip(A_dets,amplitudes)]
         C = {}
