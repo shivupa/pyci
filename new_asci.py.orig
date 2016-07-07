@@ -65,7 +65,9 @@ convergence = 1e-10
 targetdetlist_sets = []
 C = {(frozenset(range(Na)),frozenset(range(Nb))):1.0}
 coredetlist_sets = C.keys()
-coredetlist_sets=gen_dets_sets_truncated(nao,coredetlist_sets)
+for i in gen_dets_sets_truncated(nao,coredetlist_sets):
+    coredetlist_sets.append(i)
+print ((frozenset(range(Na)),frozenset(range(Nb))) in coredetlist_sets) #test to see if hf det was in fulldetlist_sets
 ndets = np.shape(coredetlist_sets)[0]
 print("Hartree-Fock Energy: ", E)
 print("")
@@ -82,7 +84,7 @@ while(np.abs(E - E_old) > convergence):
         indicies.append(index)
         #indicies.extend(np.where(fulldetlist_sets == i))
     #print indicies
-    #print ((frozenset(range(Na)),frozenset(range(Nb))) in coredetlist_sets) #test to see if hf det was in fulldetlist_sets
+    print ((frozenset(range(Na)),frozenset(range(Nb))) in coredetlist_sets) #test to see if hf det was in fulldetlist_sets
     core_ham = get_smaller_hamiltonian(full_hamiltonian,indicies)
     #print core_ham[len(indicies)-1,len(indicies)-1] == full_hamiltonian[len(indicies)-1,len(indicies)-1]
     #print(np.where(fulldetlist_sets == (frozenset(range(Na)),frozenset(range(Nb)))))
@@ -114,6 +116,7 @@ while(np.abs(E - E_old) > convergence):
     for i in sorted(A, key=A.get, reverse=True)[0:tdets]:
         targetdetlist_sets.append(i)
     #step 3
+    print tdets,len(targetdetlist_sets)
     indicies = []
     for i in targetdetlist_sets:
         index = 0

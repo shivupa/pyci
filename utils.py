@@ -444,7 +444,7 @@ def gen_dets_sets_truncated(norb,cdetlist_sets):
     """generate cdets determinants with a given number of spatial orbitals
     and alpha,beta electrons.
     return a list of 2-tuples of strings"""
-    return_list = copy.deepcopy(cdetlist_sets)
+    return_list = []
     for i in cdetlist_sets:
         return_list.extend(gen_singles_doubles(i,norb))
     return return_list
