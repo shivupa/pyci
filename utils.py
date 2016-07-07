@@ -449,6 +449,24 @@ def gen_dets_sets_truncated(norb,cdetlist_sets):
         return_list.extend(gen_singles_doubles(i,norb))
     return return_list
 
+def construct_ham_dict(coredetlist_sets,h1e,eri):
+    ham_dict = {}
+    ndets=len(coredetlist_sets)
+    for i in range(ndets):
+        idet=coredetlist_sets[i]
+        hii = calc_hii_sets(idet,h1e,eri)
+        ham_dict[frozenset((idet))] = hii
+        for j in range(i+1,ndets):
+            jdet=coredetlist_sets[j]
+            nexc_ij = n_excit_sets(idet,jdet)
+            if nexc_ij in (1,2):
+                if nexc_ij==1:
+                    hij = calc_hij_single_sets(idet,jdet,h1e,eri)
+                else:
+                    hij = calc_hij_double_sets(idet,jdet,h1e,eri)
+                ham_dict[frozenset((idet,jdet))] = hij
+    return ham_dict
+
 def construct_hamiltonian(ndets,coredetlist_sets,h1e,eri):
     hrow = []
     hcol = []
