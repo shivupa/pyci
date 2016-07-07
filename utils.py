@@ -3,6 +3,13 @@ import scipy as sp
 import scipy.linalg as spla
 import scipy.sparse.linalg as splinalg
 import copy
+import numpy as np
+from functools import reduce
+import pyscf
+import itertools
+import h5py
+from pyscf import gto, scf, ao2mo, fci
+import pyscf.tools as pt
 #2-index transformation for accessing eri elements with standard 4 indices
 #TODO: only cache i<j elements?
 __idx2_cache = {}
@@ -541,19 +548,22 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4):
     myhf = scf.RHF(mol)
     E_hf = myhf.kernel()
     mo_coefficients = myhf.mo_coeff
-    cisolver = fci.FCI(mol, mo_coefficients)
-    efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
+#    print("starting pyscf FCI")
+#    cisolver = fci.FCI(mol, mo_coefficients)
+#    efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
+#    print("FCI done")
     h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
+    print("transforming eris")
     eri = ao2mo.kernel(mol, mo_coefficients)
     #use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
     #make full 4-index eris in MO basis (only for testing idx2)
+    print("generating all determinants")
     fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
-    ndets=len(fulldetlist_sets)
-    full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
+#    ndets=len(fulldetlist_sets)
+#    full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
+    print("constructing Hamiltonian")
     hamdict = construct_ham_dict(fulldetlist_sets,h1e,eri)
     
-    cdets = 50
-    tdets = 100
     E_old = 0.0
     E_new = E_hf
     conv = 1e-10
@@ -571,9 +581,9 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4):
     while(np.abs(E_new - E_old) > conv):
         it_num += 1
         E_old = E_new
-        print("Core Dets: ",cdets)
-        print("Excitation Dets: ",ndets)
-        print("Target Dets: ",tdets)
+#        print("Core Dets: ",cdets)
+#        print("Excitation Dets: ",ndets)
+#        print("Target Dets: ",tdets)
         #step 1
         targetdetset=set()
         for idet in coreset:
@@ -603,6 +613,9 @@ def asci(mol,cdets,tdets,conv=1e-6,printroots=4):
         for i in sorted(newdet,key=lambda j: -abs(j[1])):
             C[i[0]] = i[1]
         print("")
-    print("first {:} pyci eigvals vs PYSCF eigvals".format(printroots))
-    for i,j in zip(eig_vals_sorted + E_nuc, efci):
-        print(i,j)
+#   print("first {:} pyci eigvals vs PYSCF eigvals".format(printroots))
+#   for i,j in zip(eig_vals_sorted + E_nuc, efci):
+#       print(i,j)
+    print("first {:} pyci eigvals".format(printroots))
+    for i in (eig_vals_sorted + E_nuc):
+        print(i)
