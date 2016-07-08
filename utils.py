@@ -522,7 +522,7 @@ def getsmallham(dets,hamdict):
                 hval.append(hij)
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 
-
+"""TO REMOVE
 def get_smaller_hamiltonian(h,indices):
     hrow = []
     hcol = []
@@ -539,6 +539,25 @@ def get_smaller_hamiltonian(h,indices):
             hval.append(h[indices[i],indices[j]])
             hval.append(h[indices[i],indices[j]])
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(len(indices),len(indices)))
+    """
+
+def populatehamdict(targetdetset,hamdict,h1e,eri):
+    ndets = len(targetdetset)
+    update_dict = dict()
+
+    for i in targetdetset:
+        if i not in hamdict:
+            update_dict[frozenset((i))] = calc_hii_sets(i,h1e,eri)
+            for j in targetdetset:
+                if i != j:
+                    nexc_ij = n_excit_sets(i,j)
+                    if nexc_ij in (1,2):
+                        if nexc_ij==1:
+                            update_dict[frozenset([i,j])] = calc_hij_single_sets(i,j,h1e,eri)
+                        else:
+                            update_dict[frozenset([i,j])] = calc_hij_double_sets(i,j,h1e,eri)
+    return update_dict
+
 
 def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0):
     print("PYCI")
@@ -563,12 +582,13 @@ def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0):
     eri = ao2mo.kernel(mol, mo_coefficients)
     #use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
     #make full 4-index eris in MO basis (only for testing idx2)
-    print("generating all determinants")
-    fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
+    #print("generating all determinants")
+    #fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
     #ndets=len(fulldetlist_sets)
     #full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
     print("constructing full Hamiltonian")
-    hamdict = construct_ham_dict(fulldetlist_sets,h1e,eri)
+    #hamdict = construct_ham_dict(fulldetlist_sets,h1e,eri)
+    hamdict = dict()
 
     E_old = 0.0
     E_new = E_hf
@@ -589,9 +609,15 @@ def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0):
         for idet in coreset:
             targetdetset |= set(gen_singles_doubles(idet,nao))
         A = dict.fromkeys(targetdetset, 0.0)
+        hamdict.update(populatehamdict((targetdetset | coreset),hamdict,h1e,eri))
         for idet in coreset:
-            for jdet in gen_singles_doubles(idet,nao):
-                A[jdet] += hamdict[frozenset([idet,jdet])] * C[idet]
+            for jdet in targetdetset:
+                nexc_ij = n_excit_sets(idet,jdet)
+                if nexc_ij in (1,2): # don't bother checking anything with a zero hamiltonian element
+                    try:
+                        A[jdet] += hamdict[frozenset([idet,jdet])] * C[idet]
+                    except:
+                        A[jdet] += hamdict[frozenset([jdet,idet])] * C[idet]
         for idet in targetdetset:
             A[idet] /= (hamdict[frozenset((idet))] - E_old)
         for idet in coreset:
