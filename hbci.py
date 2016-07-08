@@ -29,7 +29,7 @@ mol = gto.M(
 # Number of eigenvalues desired
 printroots=4
 # cutoff parameter
-epsilon = 0
+epsilon = 0.0001
 convergence = 0.01
 #############
 # INITIALIZE
@@ -54,15 +54,13 @@ oldselecteddetset= {hfdet}
 C = {hfdet:1.0}
 print("Hartree-Fock Energy: ", E_hf)
 print("")
-it_num = 0
+it_num = 1
 Converged = False
 hamdict=dict()
 while( not Converged):
-    it_num += 1
-    E_old = E_new
-    #step 2
     newselecteddetset=set()
-    newselecteddetset,hamdict = heatbath(oldselecteddetset,nao,hamdict,C,epsilon,h1e,eri)
+    newselecteddetset,hamdict_additions = heatbath(oldselecteddetset,nao,hamdict,C,epsilon,h1e,eri)
+    hamdict.update(hamdict_additions)
     newselecteddetset |= oldselecteddetset
     hamdict.update(populatehamdict((newselecteddetset),hamdict,h1e,eri))
     selectedham = getsmallham(list(newselecteddetset),hamdict)
@@ -81,6 +79,8 @@ while( not Converged):
     else:
         print("Iteration {:} space growth %: ".format(it_num), amount_added)
     oldselecteddetset |= newselecteddetset
+    it_num += 1
+    E_old = E_new
     print("Selected Space size: ",len(oldselecteddetset))
     print("")
 

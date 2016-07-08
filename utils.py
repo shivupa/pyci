@@ -657,8 +657,8 @@ def heatbath(det,norb,hamdict,amplitudes,epsilon,h1e,eri):
         excitation_space |= set(gen_singles(i,norb) + gen_doubles(i,norb))
     remove_set = set()
     for i in excitation_space:
+        add = False
         for j in det:
-            add = False
             nexc_ij = n_excit_sets(i,j)
             if nexc_ij in (1,2):
                 if nexc_ij==1:
