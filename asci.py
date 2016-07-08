@@ -1,4 +1,4 @@
-#!/bin/python3
+ #!/bin/python3
 import scipy as sp
 import scipy.linalg as spla
 import scipy.sparse.linalg as splinalg
@@ -32,47 +32,69 @@ printroots=4
 cdets = 500
 # size of target space
 tdets = 600
+#covnergence
+convergence = 1e-13
 #############
 # INITIALIZE
 #############
+print("PYCI")
+print("method: ASCI")
+print("convergence: ", convergence)
+print("Core Space size: ",cdets)
+print("Target Space size: ",tdets)
+print("Number of eigenvalues: ",printroots)
+print("")
 Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
 E_nuc = mol.energy_nuc()
 nao = mol.nao_nr()
 myhf = scf.RHF(mol)
 E_hf = myhf.kernel()
 mo_coefficients = myhf.mo_coeff
+#print("starting pyscf FCI")
+#cisolver = fci.FCI(mol, mo_coefficients)
+#efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
+#print("FCI done")
 h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
+print("transforming eris")
 eri = ao2mo.kernel(mol, mo_coefficients)
-num_orbs=2*nao
-num_occ = mol.nelectron
-num_virt = num_orbs - num_occ
-fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
-ndets=len(fulldetlist_sets)
-full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
-hamdict = construct_ham_dict(fulldetlist_sets,h1e,eri)
+#use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
+#make full 4-index eris in MO basis (only for testing idx2)
+#print("generating all determinants")
+#fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
+#ndets=len(fulldetlist_sets)
+#full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
+print("constructing full Hamiltonian")
+#hamdict = construct_ham_dict(fulldetlist_sets,h1e,eri)
+hamdict = dict()
+
 E_old = 0.0
 E_new = E_hf
-convergence = 1e-3
 hfdet = (frozenset(range(Na)),frozenset(range(Nb)))
 targetdetset = set()
 coreset = {hfdet}
 C = {hfdet:1.0}
-print("Hartree-Fock Energy: ", E_hf)
-print("")
+print("\nHartree-Fock Energy: ", E_hf)
+print("\nBeginning Iterations\n")
 it_num = 0
 while(np.abs(E_new - E_old) > convergence):
-    print("is hfdet in coreset? ", hfdet in coreset)
+    #print("is hfdet in coreset? ", hfdet in coreset)
     it_num += 1
     E_old = E_new
-    print("Core Dets: ",len(coreset))
+    #print("Core Dets: ",len(coreset))
     #step 1
     targetdetset=set()
     for idet in coreset:
         targetdetset |= set(gen_singles_doubles(idet,nao))
     A = dict.fromkeys(targetdetset, 0.0)
+    hamdict.update(populatehamdict((targetdetset | coreset),hamdict,h1e,eri))
     for idet in coreset:
-        for jdet in gen_singles_doubles(idet,nao):
-            A[jdet] += hamdict[frozenset([idet,jdet])] * C[idet]
+        for jdet in targetdetset:
+            nexc_ij = n_excit_sets(idet,jdet)
+            if nexc_ij in (1,2): # don't bother checking anything with a zero hamiltonian element
+                try:
+                    A[jdet] += hamdict[frozenset([idet,jdet])] * C[idet]
+                except:
+                    A[jdet] += hamdict[frozenset([jdet,idet])] * C[idet]
     for idet in targetdetset:
         A[idet] /= (hamdict[frozenset((idet))] - E_old)
     for idet in coreset:
@@ -83,7 +105,7 @@ while(np.abs(E_new - E_old) > convergence):
             A[idet] = C[idet]
     A_sorted = sorted(list(A.items()),key=lambda i: -abs(i[1]))
     A_truncated = A_sorted[:tdets]
-    print("Target Dets: ",len(A_truncated))
+    #print("Target Dets: ",len(A_truncated))
     A_dets = [i[0] for i in A_truncated]
     targetham = getsmallham(A_dets,hamdict)
     eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)

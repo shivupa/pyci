@@ -387,7 +387,6 @@ def calc_hii_sets(idet,hcore,eri):
             hii += 0.5*(eri[idx4(ib,ib,jb,jb)]-eri[idx4(ib,jb,jb,ib)])
     for ia in aocc:
         for jb in bocc:
-            #TODO(shiv): I believe this is missing a factor of 0.5? Or im just unsure where this term comes from
             hii += eri[idx4(ia,ia,jb,jb)]
     return hii
 def calc_hij_single_sets(idet,jdet,hcore,eri):
@@ -641,8 +640,6 @@ def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0):
         C = {}
         for i in sorted(newdet,key=lambda j: -abs(j[1]))[:cdets]:
             C[i[0]] = i[1]
-        if sorted(newdet,key=lambda j: -abs(j[1]))[0][0] != hfdet:
-            print("Biggest Contributor is NOT HF det ", sorted(newdet,key=lambda j: -abs(j[1]))[0])
         coreset = set(C.keys())
         print("")
     #   print("first {:} pyci eigvals vs PYSCF eigvals".format(printroots))
@@ -651,7 +648,33 @@ def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0):
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
         print(i)
+    print("size of hamdict:", len(hamdict))
     print("Completed!")
-
+##############################################HBCI functions
+def heatbath(det,norb,hamdict,amplitudes,epsilon,h1e,eri):
+    excitation_space = set()
+    for i in det:
+        excitation_space |= set(gen_singles(i,norb) + gen_doubles(i,norb))
+    remove_set = set()
+    for i in excitation_space:
+        for j in det:
+            add = False
+            nexc_ij = n_excit_sets(i,j)
+            if nexc_ij in (1,2):
+                if nexc_ij==1:
+                    h = calc_hij_single_sets(i,j,h1e,eri)
+                    if abs(h*amplitudes[j]) >= epsilon:
+                        add = True
+                        hamdict[frozenset([i,j])] = h
+                else:
+                    h = calc_hij_double_sets(i,j,h1e,eri)
+                    if abs(h*amplitudes[j]) >= epsilon:
+                        add = True
+                        hamdict[frozenset([i,j])] = h
+        if add == False:
+            remove_set.add(i)
+    return excitation_space-remove_set, hamdict
+#def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4,iter_min=0):
+###########################################################
 if __name__ == "__main__":
     print("\nPYCI utils file. This file was not meant to be run independently.")
