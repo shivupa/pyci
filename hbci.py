@@ -21,7 +21,8 @@ mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
             ['H', (1.638036840407,   1.136548822547,  -0.000000000000)],
             ['H', (-1.638036840407,   1.136548822547,  -0.000000000000)]],
-    basis = 'STO-3G',
+    #basis = 'STO-3G',
+    basis = '6-31G',
     verbose = 1,
     unit='b',
     symmetry=True
@@ -29,7 +30,7 @@ mol = gto.M(
 # Number of eigenvalues desired
 printroots=4
 # cutoff parameter
-epsilon = 0.0001
+epsilon = 0.01
 convergence = 0.01
 #############
 # INITIALIZE
@@ -85,12 +86,12 @@ while( not Converged):
     print("")
 
 
-eig_vals_gamess = [-75.0129802245,
-                   -74.7364625517,
-                   -74.6886742417,
-                   -74.6531877287]
-cisolver = fci.FCI(mol, mo_coefficients)
-efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
+#eig_vals_gamess = [-75.0129802245,
+    #               -74.7364625517,
+     #              -74.6886742417,
+      #             -74.6531877287]
+#cisolver = fci.FCI(mol, mo_coefficients)
+#efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
 print("first {:} PYCI HBCI eigvals vs PYSCF FCI eigvals vs GAMESS FCI eigvals".format(printroots))
-for i,j,k in zip(eig_vals_sorted + E_nuc, efci, eig_vals_gamess):
-    print(i,j,k)
+#for i,j,k in zip(eig_vals_sorted + E_nuc, efci, eig_vals_gamess):
+    #print(i,j,k)
