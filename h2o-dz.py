@@ -29,6 +29,29 @@ mol = gto.M(
     unit='b',
     symmetry=True
 )
+###################################
+print(79*"~")
+print(30*" "+ "FCI")
+print(79*"~")
+start = time.time()
+fci(mol,printroots=4)
+end = time.time()
+print("RUN TIME FCI: (h:m:s)")
+m, s = divmod(end-start, 60)
+h, m = divmod(m, 60)
+print("%d:%02d:%02d" % (h, m, s))
+###################################
+print(79*"~")
+print(30*" "+ "CISD")
+print(79*"~")
+start = time.time()
+cisd(mol,printroots=4)
+end = time.time()
+print("RUN TIME CISD: (h:m:s)")
+m, s = divmod(end-start, 60)
+h, m = divmod(m, 60)
+print("%d:%02d:%02d" % (h, m, s))
+###################################
 print(79*"~")
 print(30*" "+ "ASCI")
 print(79*"~")

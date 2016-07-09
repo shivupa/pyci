@@ -557,7 +557,7 @@ def populatehamdict(targetdetset,hamdict,h1e,eri):
                             update_dict[frozenset([i,j])] = calc_hij_double_sets(i,j,h1e,eri)
     return update_dict
 
-
+###########################################################ASCI funcs
 def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0):
     print("PYCI")
     print("method: ASCI")
@@ -692,10 +692,8 @@ def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4):
     num_orbs=2*nao
     num_occ = mol.nelectron
     num_virt = num_orbs - num_occ
-
     E_old = 0.0
     E_new = E_hf
-
     hfdet = (frozenset(range(Na)),frozenset(range(Nb)))
     oldselecteddetset= {hfdet}
     C = {hfdet:1.0}
@@ -730,6 +728,69 @@ def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4):
         E_old = E_new
         print("Selected Space size: ",len(oldselecteddetset))
         print("")
+    print("first {:} pyci eigvals".format(printroots))
+    for i in (eig_vals_sorted + E_nuc):
+        print(i)
+    print("Completed!")
+###########################################################CISD funcs
+def cisd(mol,printroots=4):
+    print("PYCI")
+    print("method: CISD")
+    print("Number of eigenvalues: ",printroots)
+    print("")
+    Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
+    E_nuc = mol.energy_nuc()
+    nao = mol.nao_nr()
+    myhf = scf.RHF(mol)
+    E_hf = myhf.kernel()
+    mo_coefficients = myhf.mo_coeff
+    h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
+    print("transforming eris")
+    eri = ao2mo.kernel(mol, mo_coefficients)
+    hamdict = dict()
+    E_old = 0.0
+    E_new = E_hf
+    hfdet = (frozenset(range(Na)),frozenset(range(Nb)))
+    targetdetset = set()
+    coreset = {hfdet}
+    print("\nHartree-Fock Energy: ", E_hf)
+    targetdetset=set()
+    for idet in coreset:
+        targetdetset |= set(gen_singles_doubles(idet,nao))
+    targetdetset |= coreset
+    hamdict.update(populatehamdict(targetdetset,hamdict,h1e,eri))
+    targetham = getsmallham(list(targetdetset),hamdict)
+    eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
+    eig_vals_sorted = np.sort(eig_vals)[:printroots]
+    E_new = eig_vals_sorted[0]
+    print("")
+    print("first {:} pyci eigvals".format(printroots))
+    for i in (eig_vals_sorted + E_nuc):
+        print(i)
+    print("Completed!")
+###########################################################fci funcs
+def fci(mol,printroots=4):
+    print("PYCI")
+    print("method: FCI")
+    print("Number of eigenvalues: ",printroots)
+    print("")
+    Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
+    E_nuc = mol.energy_nuc()
+    nao = mol.nao_nr()
+    myhf = scf.RHF(mol)
+    E_hf = myhf.kernel()
+    mo_coefficients = myhf.mo_coeff
+    h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
+    print("transforming eris")
+    eri = ao2mo.kernel(mol, mo_coefficients)
+    print("generating all determinants")
+    fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
+    ndets=len(fulldetlist_sets)
+    print("constructing full Hamiltonian")
+    full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
+    eig_vals,eig_vecs = sp.sparse.linalg.eigsh(full_hamiltonian,k=2*printroots)
+    eig_vals_sorted = np.sort(eig_vals)[:printroots]
+    print("")
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
         print(i)
