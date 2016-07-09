@@ -23,12 +23,15 @@ mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
             ['H', (1.638036840407,   1.136548822547,  -0.000000000000)],
             ['H', (-1.638036840407,   1.136548822547,  -0.000000000000)]],
-    basis = '6-31G',
-    #basis = 'sto-6g',
+    #basis = '6-31G',
+    basis = 'sto-6g',
     verbose = 1,
     unit='b',
     symmetry=True
 )
+print(79*"~")
+print(30*" "+ "ASCI")
+print(79*"~")
 start = time.time()
 asci(mol,50,100,10e-9,iter_min=10)
 end = time.time()
@@ -36,6 +39,18 @@ print("RUN TIME ASCI: (h:m:s)")
 m, s = divmod(end-start, 60)
 h, m = divmod(m, 60)
 print("%d:%02d:%02d" % (h, m, s))
+###################################
+print(79*"~")
+print(30*" "+ "HBCI")
+print(79*"~")
+start = time.time()
+hbci(mol,epsilon=0.01,convergence=0.01,printroots=4)
+end = time.time()
+print("RUN TIME HBCI: (h:m:s)")
+m, s = divmod(end-start, 60)
+h, m = divmod(m, 60)
+print("%d:%02d:%02d" % (h, m, s))
+###################################
 """
 print("FCI from PYSCF")
 start = time.time()
