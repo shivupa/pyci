@@ -649,7 +649,7 @@ def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0):
     for i in (eig_vals_sorted + E_nuc):
         print(i)
     print("size of hamdict:", len(hamdict))
-    print("Completed!")
+    print("Completed ASCI!")
 ##############################################HBCI functions
 def heatbath(det,norb,hamdict,amplitudes,epsilon,h1e,eri):
     excitation_space = set()
@@ -731,7 +731,7 @@ def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4):
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
         print(i)
-    print("Completed!")
+    print("Completed HBCI!")
 ###########################################################CISD funcs
 def cisd(mol,printroots=4):
     print("PYCI")
@@ -767,7 +767,7 @@ def cisd(mol,printroots=4):
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
         print(i)
-    print("Completed!")
+    print("Completed CISD!")
 ###########################################################fci funcs
 def fci(mol,printroots=4):
     print("PYCI")
@@ -794,7 +794,7 @@ def fci(mol,printroots=4):
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
         print(i)
-    print("Completed!")
+    print("Completed FCI!")
 ###########################################################
 if __name__ == "__main__":
     print("\nPYCI utils file. This file was not meant to be run independently.")
