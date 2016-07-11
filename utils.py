@@ -23,7 +23,6 @@ def idx2(i,j):
     else:
         __idx2_cache[i,j] = int(j*(j+1)/2+i)
     return __idx2_cache[i,j]
-
 #not sure whether caching is worthwhile here if this just calls idx2, which is already cached
 #__idx4_cache = {}
 def idx4(i,j,k,l):
@@ -31,10 +30,8 @@ def idx4(i,j,k,l):
     square eri array (size n*(n-1)/2 square) (4-fold symmetry?)"""
     #    if (i,j,k,l) in __idx4_cache:
     return (idx2(i,j),idx2(k,l))
-
 #determine degree of excitation between two dets (as strings of {0,1})
 #can be reformulated with sets. will be easier
-
 def n_excit(idet,jdet):
     """get the hamming weight of a bitwise xor on two determinants.
     This will show how the number of orbitals in which they have different
@@ -44,14 +41,12 @@ def n_excit(idet,jdet):
     aexc = n_excit_spin(idet,jdet,0)
     bexc = n_excit_spin(idet,jdet,1)
     return aexc+bexc
-
 def n_excit_sets(idet,jdet):
     if idet==jdet:
         return 0
     aexc = n_excit_spin_sets(idet,jdet,0)
     bexc = n_excit_spin_sets(idet,jdet,1)
     return aexc+bexc
-
 def n_excit_spin(idet,jdet,spin):
     """get the hamming weight of a bitwise xor on two determinants.
     This will show how the number of orbitals in which they have different
@@ -59,12 +54,10 @@ def n_excit_spin(idet,jdet,spin):
     if idet[spin]==jdet[spin]:
         return 0
     return (bin(int(idet[spin],2)^int(jdet[spin],2)).count('1'))/2
-
 def n_excit_spin_sets(idet,jdet,spin):
     if idet[spin]==jdet[spin]:
         return 0
     return len(idet[spin]-jdet[spin])
-
 #get hamming weight
 #technically, this is the number of nonzero bits in a binary int, but we might be using strings\
 #long slow down if we call this in n_excit_spin weird
@@ -132,7 +125,6 @@ def a_b_occ(idet):
         if b:
             bocc.append(i)
     return (aocc,bocc)
-
 def hole_part_sign_single(idet,jdet,spin,debug=False):
     holeint,partint = map(bitstr2intlist,(idet[spin],jdet[spin]))
     if debug:
@@ -151,7 +143,6 @@ def hole_part_sign_single(idet,jdet,spin,debug=False):
                 print("part = ",i)
     sign = getsign(holeint,partint,hole,part)
     return (hole,part,sign)
-
 def hole_part_sign_single_sets(idet,jdet,spin,debug=False):
     holeset,partset = (idet[spin],jdet[spin])
     if debug:
@@ -160,13 +151,11 @@ def hole_part_sign_single_sets(idet,jdet,spin,debug=False):
     part,=(partset-holeset)
     sign = getsign_sets(holeset,hole,part)
     return (hole,part,sign)
-
 def signstr(s1,s2,h1,p1):
     holeint,partint = map(bitstr2intlist,(s1,s2))
     print(holeint)
     print(partint)
     return getsign(holeint,partint,h1,p1,debug=True)
-
 def holes_parts_sign_double(idet,jdet,spin):
     holeint,partint = map(bitstr2intlist,(idet[spin],jdet[spin]))
     holes=[]
@@ -181,7 +170,6 @@ def holes_parts_sign_double(idet,jdet,spin):
     sign1 = getsign(holeint,partint,h1,p1)
     sign2 = getsign(holeint,partint,h2,p2)
     return (h1,h2,p1,p2,sign1*sign2)
-
 def holes_parts_sign_double_sets(idet,jdet,spin):
     holeset,partset = (idet[spin],jdet[spin])
     holes=set(holeset-partset)
@@ -194,9 +182,7 @@ def holes_parts_sign_double_sets(idet,jdet,spin):
     sign2 = getsign_sets(partset,h2,p2)
     sign = sign1*sign2
     return (h1,h2,p1,p2,sign)
-
 def getsign(holeint,partint,h,p,debug=False):
-
     #determine which index comes first (hole or particle) for each pair
     if h < p:
         stri = holeint[h:p]
@@ -215,7 +201,6 @@ def getsign(holeint,partint,h,p,debug=False):
                 print ("signchange")
             sign *= -1
     return sign
-
 def getsign_sets(holeset,h,p,debug=False):
     #determine which index comes first (hole or particle) for each pair
     if h < p:
@@ -224,7 +209,6 @@ def getsign_sets(holeset,h,p,debug=False):
         num = [i for i in holeset if i<h and i>p]
     sign=(-1)**len(num)
     return sign
-
 def hole_part_sign_spin_double(idet,jdet):
     #if the two excitations are of different spin, just do them individually
     x0 = n_excit_spin(idet,jdet,0)
@@ -242,7 +226,6 @@ def hole_part_sign_spin_double(idet,jdet):
         #TODO get holes, particles, and sign
         hole1,hole2,part1,part2,sign = holes_parts_sign_double(idet,jdet,spin)
     return (hole1,hole2,part1,part2,sign,samespin)
-
 def hole_part_sign_spin_double_sets(idet,jdet):
     #if the two excitations are of different spin, just do them individually
     x0 = n_excit_spin_sets(idet,jdet,0)
@@ -260,7 +243,6 @@ def hole_part_sign_spin_double_sets(idet,jdet):
         #TODO get holes, particles, and sign
         hole1,hole2,part1,part2,sign = holes_parts_sign_double_sets(idet,jdet,spin)
     return (hole1,hole2,part1,part2,sign,samespin)
-
 def d_a_b_1hole(idet,hole,spin):
     #get doubly/singly occ orbs in the first det
     docc,aocc,bocc = d_a_b_occ(idet)
@@ -276,13 +258,11 @@ def d_a_b_1hole(idet,hole,spin):
     else:
         bocc = sorted(list(set(bocc)-{hole}))
     return (docc,aocc,bocc)
-
 def a_b_1hole_sets(idet,hole,spin):
     if spin==0:
         return (idet[0]-{hole},idet[1])
     else:
         return (idet[0],idet[1]-{hole})
-
 def d_a_b_single(idet,jdet):
     #if alpha strings are the same for both dets, the difference is in the beta part
     #alpha is element 0, beta is element 1
@@ -293,7 +273,6 @@ def d_a_b_single(idet,jdet):
     hole,part,sign = hole_part_sign_single(idet,jdet,spin)
     docc,aocc,bocc = d_a_b_1hole(idet,hole,spin)
     return (hole,part,sign,spin,docc,aocc,bocc)
-
 def a_b_single_sets(idet,jdet):
     #if alpha strings are the same for both dets, the difference is in the beta part
     #alpha is element 0, beta is element 1
@@ -373,7 +352,6 @@ def calc_hij_double(idet,jdet,hcore,eri):
 # <r|hcore|i> + sum_j^{occ(both)} (ri|jj) - (rj|ji)
 # multiply by appropriate sign
 # (parity of permutation that puts orbitals back in normal order from direct hole->particle substitution)
-
 def calc_hii_sets(idet,hcore,eri):
     hii=0.0
     aocc,bocc = idet
@@ -410,7 +388,6 @@ def calc_hij_double_sets(idet,jdet,hcore,eri):
         hij -= eri[idx4(p1,h2,p2,h1)]
     hij *= sign
     return hij
-
 def get_excitations(det,norb,aexc,bexc):
     """
     usage: get_excitations(det,norb,aexc,bexc)
@@ -436,17 +413,12 @@ def get_excitations(det,norb,aexc,bexc):
         for ivirt in itertools.combinations(bvirt,bexc):
             bdets.append(bocc - set(iocc) | set(ivirt))
     return [(i,j) for i in adets for j in bdets]
-
 def gen_singles(det,norb):
     return get_excitations(det,norb,1,0) + get_excitations(det,norb,0,1)
-
 def gen_doubles(det,norb):
     return get_excitations(det,norb,2,0) + get_excitations(det,norb,0,2) + get_excitations(det,norb,1,1)
-
 def gen_singles_doubles(det,norb):
     return gen_singles(det,norb) + gen_doubles(det,norb)
-
-
 ##############################################ASCI funcs
 def gen_dets_sets_truncated(norb,cdetlist_sets):
     """generate cdets determinants with a given number of spatial orbitals
@@ -456,7 +428,6 @@ def gen_dets_sets_truncated(norb,cdetlist_sets):
     for i in cdetlist_sets:
         return_list.extend(gen_singles_doubles(i,norb))
     return return_list
-
 def construct_ham_dict(coredetlist_sets,h1e,eri):
     ham_dict = {}
     ndets=len(coredetlist_sets)
@@ -474,7 +445,6 @@ def construct_ham_dict(coredetlist_sets,h1e,eri):
                     hij = calc_hij_double_sets(idet,jdet,h1e,eri)
                 ham_dict[frozenset((idet,jdet))] = hij
     return ham_dict
-
 def construct_hamiltonian(ndets,coredetlist_sets,h1e,eri):
     hrow = []
     hcol = []
@@ -500,7 +470,6 @@ def construct_hamiltonian(ndets,coredetlist_sets,h1e,eri):
                 hval.append(hij)
                 hval.append(hij)
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
-
 def getsmallham(dets,hamdict):
     hrow=[]
     hcol=[]
@@ -522,7 +491,6 @@ def getsmallham(dets,hamdict):
                 hval.append(hij)
                 hval.append(hij)
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
-
 """TO REMOVE
 def get_smaller_hamiltonian(h,indices):
     hrow = []
@@ -541,7 +509,6 @@ def get_smaller_hamiltonian(h,indices):
             hval.append(h[indices[i],indices[j]])
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(len(indices),len(indices)))
     """
-
 def populatehamdict(targetdetset,hamdict,h1e,eri):
     ndets = len(targetdetset)
     update_dict = dict()
@@ -558,7 +525,6 @@ def populatehamdict(targetdetset,hamdict,h1e,eri):
                         else:
                             update_dict[frozenset([i,j])] = calc_hij_double_sets(i,j,h1e,eri)
     return update_dict
-
 ###########################################################ASCI funcs
 def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0,visualize=False):
     print("PYCI")
@@ -773,6 +739,7 @@ def cisd(mol,printroots=4,visualize=False):
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
         print(i)
+    print(np.shape(eig_vecs))
     if visualize:
         newdet = [i for i in zip(list(targetdetset),eig_vecs[:,np.argsort(eig_vals)[0]])]
         visualize_sets(newdet,nao,Na,Nb,"CISD")
@@ -912,7 +879,6 @@ def aci(mol,sigma = 100,gamma = 0.001,convergence = 1e-10,printroots=4,iter_min=
     if visualize:
         visualize_sets(newdet,nao,Na,Nb,"ACI")
     print("Completed ACI!")
-
 ########################################################### visualization
 def visualize_sets(a,nao,Na,Nb,name):
     fulldetset=gen_dets_sets(nao,Na,Nb)

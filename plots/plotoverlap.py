@@ -24,7 +24,6 @@ FCI_FCI_overlap = np.sum(np.dot(FCI,FCI))
 plot_vecs = np.array(np.abs([ACI_FCI_overlap , ASCI_FCI_overlap , CISD_FCI_overlap , HBCI_FCI_overlap , FCI_FCI_overlap]))
 plot_vecs -= FCI_FCI_overlap
 
-
 plt.bar(np.arange(len(plot_vecs)) , np.abs(plot_vecs), color = colors[0],edgecolor = colors[0],align='center')
 
 plt.xticks(np.arange(len(plot_vecs)),["ACI","ASCI","CISD","HBCI","FCI"],rotation='vertical')
