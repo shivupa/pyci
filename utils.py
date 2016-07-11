@@ -10,6 +10,8 @@ import itertools
 import h5py
 from pyscf import gto, scf, ao2mo, fci
 import pyscf.tools as pt
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 #2-index transformation for accessing eri elements with standard 4 indices
 #TODO: only cache i<j elements?
 __idx2_cache = {}
@@ -795,6 +797,30 @@ def fci(mol,printroots=4):
     for i in (eig_vals_sorted + E_nuc):
         print(i)
     print("Completed FCI!")
-###########################################################
+########################################################### visualization
+def visualize_sets(a,fulldetset):
+    full = np.array(list(fulldetset))
+    occupied_dets = np.array(a)[:,0]
+    occupied_amps = np.array(a)[:,1]
+    occ_plot = np.zeros(len(full))
+    count = 0
+    for i in range(len(occupied_dets)):
+        for j in range(len(fulldetset)):
+            if (occupied_dets[i][0] == fulldetset[j][0] and occupied_dets[i][1] == fulldetset[j][1]):
+                occ_plot[j] = occupied_amps[i]
+
+
+    plt.rc('font', family='serif',size = 24)
+    fig = plt.figure(facecolor='white',figsize=(10,10))
+    ax = fig.add_subplot(111)
+    ax.xaxis.labelpad = 20
+    ax.yaxis.labelpad = 20
+    plt.bar(np.arange(len(occ_plot)), np.abs(occ_plot), align='center')
+    ax.set_yscale('log')
+    fig.tight_layout()
+    fig.savefig('plot.svg')
+    #plt.show()
+
+
 if __name__ == "__main__":
     print("\nPYCI utils file. This file was not meant to be run independently.")

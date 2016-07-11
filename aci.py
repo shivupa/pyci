@@ -31,9 +31,9 @@ printroots=4
 # tuning parameter
 sigma = 100
 # coarse graining parameter
-gamma = 0.01
+gamma = 0.001
 #convergence
-convergence = 1e-13
+convergence = 1e-10
 #############
 # INITIALIZE
 #############
@@ -48,21 +48,9 @@ nao = mol.nao_nr()
 myhf = scf.RHF(mol)
 E_hf = myhf.kernel()
 mo_coefficients = myhf.mo_coeff
-#print("starting pyscf FCI")
-#cisolver = fci.FCI(mol, mo_coefficients)
-#efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
-#print("FCI done")
 h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
 print("transforming eris")
 eri = ao2mo.kernel(mol, mo_coefficients)
-#use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
-#make full 4-index eris in MO basis (only for testing idx2)
-#print("generating all determinants")
-#fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
-#ndets=len(fulldetlist_sets)
-#full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
-print("constructing full Hamiltonian")
-#hamdict = construct_ham_dict(fulldetlist_sets,h1e,eri)
 hamdict = dict()
 
 E_old = 0.0
@@ -105,9 +93,8 @@ while(np.abs(E_new - E_old) > convergence):
     #cumulative energy error eq 6
     count = 0
     err = 0.0
-    while (abs(err)<=sigma):
+    while (abs(err)<=sigma and count < len(A_sorted)):
         err += A_sorted[count][1]
-        print(err,count)
         count +=1
     #step 5
     A_truncated = A_sorted[:count]
@@ -135,14 +122,17 @@ while(np.abs(E_new - E_old) > convergence):
         print("Biggest Contributor is NOT HF det ", sorted(newdet,key=lambda j: -abs(j[1]))[0])
     coreset = set(C.keys())
     print("")
-
+visualize_sets(newdet,gen_dets_sets(nao,Na,Nb))
 
 eig_vals_gamess = [-75.0129802245,
                    -74.7364625517,
                    -74.6886742417,
                    -74.6531877287]
-cisolver = fci.FCI(mol, mo_coefficients)
-efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
-print("first {:} PYCI ASCI eigvals vs PYSCF FCI eigvals vs GAMESS FCI eigvals".format(printroots))
-for i,j,k in zip(eig_vals_sorted + E_nuc, efci, eig_vals_gamess):
-    print(i,j,k)
+#cisolver = fci.FCI(mol, mo_coefficients)
+#efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
+#print("first {:} PYCI ASCI eigvals vs PYSCF FCI eigvals vs GAMESS FCI eigvals".format(printroots))
+#for i,j,k in zip(eig_vals_sorted + E_nuc, efci, eig_vals_gamess):
+#    print(i,j,k)
+print("first {:} pyci eigvals".format(printroots))
+for i in (eig_vals_sorted + E_nuc):
+    print(i)
