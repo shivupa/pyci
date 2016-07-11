@@ -560,7 +560,7 @@ def populatehamdict(targetdetset,hamdict,h1e,eri):
     return update_dict
 
 ###########################################################ASCI funcs
-def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0):
+def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0,visualize=False):
     print("PYCI")
     print("method: ASCI")
     print("convergence: ", convergence)
@@ -651,6 +651,8 @@ def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0):
     for i in (eig_vals_sorted + E_nuc):
         print(i)
     print("size of hamdict:", len(hamdict))
+    if visualize:
+        visualize_sets(newdet,nao,Na,Nb,"ASCI")
     print("Completed ASCI!")
 ##############################################HBCI functions
 def heatbath(det,norb,hamdict,amplitudes,epsilon,h1e,eri):
@@ -676,7 +678,7 @@ def heatbath(det,norb,hamdict,amplitudes,epsilon,h1e,eri):
         if add == False:
             remove_set.add(i)
     return excitation_space-remove_set, hamdict
-def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4):
+def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4,visualize=False):
     print("PYCI")
     print("method: HBCI")
     print("convergence: ", convergence)
@@ -733,9 +735,11 @@ def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4):
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
         print(i)
+    if visualize:
+        visualize_sets(newdet,nao,Na,Nb,"HBCI")
     print("Completed HBCI!")
 ###########################################################CISD funcs
-def cisd(mol,printroots=4):
+def cisd(mol,printroots=4,visualize=False):
     print("PYCI")
     print("method: CISD")
     print("Number of eigenvalues: ",printroots)
@@ -769,9 +773,12 @@ def cisd(mol,printroots=4):
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
         print(i)
+    if visualize:
+        newdet = [i for i in zip(list(targetdetset),eig_vecs[:,np.argsort(eig_vals)[0]])]
+        visualize_sets(newdet,nao,Na,Nb,"CISD")
     print("Completed CISD!")
 ###########################################################fci funcs
-def fci(mol,printroots=4):
+def fci(mol,printroots=4,visualize=False):
     print("PYCI")
     print("method: FCI")
     print("Number of eigenvalues: ",printroots)
@@ -796,9 +803,119 @@ def fci(mol,printroots=4):
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
         print(i)
+    if visualize:
+        print(len(fulldetlist_sets),len(eig_vecs[:,np.argsort(eig_vals)[0]]))
+        newdet = [i for i in zip(list(fulldetlist_sets),eig_vecs[:,np.argsort(eig_vals)[0]])]
+        visualize_sets(newdet,nao,Na,Nb,"FCI")
     print("Completed FCI!")
+########################################################### ACI
+def aci(mol,sigma = 100,gamma = 0.001,convergence = 1e-10,printroots=4,iter_min=0,visualize=False):
+    print("PYCI")
+    print("method: ACI")
+    print("convergence: ", convergence)
+    print("Sigma: ",sigma)
+    print("Gamma: ",gamma)
+    print("Number of eigenvalues: ",printroots)
+    print("")
+    Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
+    E_nuc = mol.energy_nuc()
+    nao = mol.nao_nr()
+    myhf = scf.RHF(mol)
+    E_hf = myhf.kernel()
+    mo_coefficients = myhf.mo_coeff
+    #print("starting pyscf FCI")
+    #cisolver = fci.FCI(mol, mo_coefficients)
+    #efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
+    #print("FCI done")
+    h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
+    print("transforming eris")
+    eri = ao2mo.kernel(mol, mo_coefficients)
+    #use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
+    #make full 4-index eris in MO basis (only for testing idx2)
+    #print("generating all determinants")
+    #fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
+    #ndets=len(fulldetlist_sets)
+    #full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
+    print("constructing full Hamiltonian")
+    #hamdict = construct_ham_dict(fulldetlist_sets,h1e,eri)
+    hamdict = dict()
+
+    E_old = 0.0
+    E_new = E_hf
+    hfdet = (frozenset(range(Na)),frozenset(range(Nb)))
+    targetdetset = set()
+    coreset = {hfdet}
+    C = {hfdet:1.0}
+    print("\nHartree-Fock Energy: ", E_hf)
+    print("\nBeginning Iterations\n")
+    it_num = 0
+    while(np.abs(E_new - E_old) > convergence):
+        #print("is hfdet in coreset? ", hfdet in coreset)
+        it_num += 1
+        E_old = E_new
+        #print("Core Dets: ",len(coreset))
+        #step 2
+        targetdetset=set()
+        for idet in coreset:
+            targetdetset |= set(gen_singles_doubles(idet,nao))
+        A = dict.fromkeys(targetdetset, 0.0)
+        hamdict.update(populatehamdict((targetdetset | coreset),hamdict,h1e,eri))
+
+
+        #equation 5
+
+        for jdet in targetdetset:
+            V = 0
+            for idet in coreset:
+                nexc_ij = n_excit_sets(idet,jdet)
+                if nexc_ij in (1,2): # don't bother checking anything with a zero hamiltonian element
+                    try:
+                        V += hamdict[frozenset([idet,jdet])] * C[idet]
+                    except:
+                        V += hamdict[frozenset([jdet,idet])] * C[idet]
+            delta  = (hamdict[frozenset((jdet))] - E_new)/2.0
+            A[jdet] = delta - np.sqrt((delta**2.0) + V**2.0)
+        #step 4
+        A_sorted = sorted(list(A.items()),key=lambda i: -abs(i[1]))
+        #cumulative energy error eq 6
+        count = 0
+        err = 0.0
+        while (abs(err)<=sigma and count < len(A_sorted)):
+            err += A_sorted[count][1]
+            count +=1
+        #step 5
+        A_truncated = A_sorted[:count]
+        A_dets = [i[0] for i in A_truncated]
+        A_dets += [i for i in coreset]
+        print("Q space size: ",len(A_truncated))
+        targetham = getsmallham(A_dets,hamdict)
+        eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
+        eig_vals_sorted = np.sort(eig_vals)[:printroots]
+        E_new = eig_vals_sorted[0]
+        print("Iteration {:} Energy: ".format(it_num), E_new + E_nuc)
+        #step 4
+        amplitudes = eig_vecs[:,np.argsort(eig_vals)[0]]
+        newdet = [i for i in zip(A_dets,amplitudes)]
+        C = {}
+        #eq 10
+        sorted_newdet = sorted(newdet,key=lambda j: -abs(j[1]))
+        err = 0
+        count = 0
+        while abs(err) <= 1-(gamma*sigma):
+            err += sorted_newdet[count][1]**2
+            C[sorted_newdet[count][0]] = sorted_newdet[count][1]
+            count +=1
+        if sorted(newdet,key=lambda j: -abs(j[1]))[0][0] != hfdet:
+            print("Biggest Contributor is NOT HF det ", sorted(newdet,key=lambda j: -abs(j[1]))[0])
+        coreset = set(C.keys())
+        print("")
+    if visualize:
+        visualize_sets(newdet,nao,Na,Nb,"ACI")
+    print("Completed ACI!")
+
 ########################################################### visualization
-def visualize_sets(a,fulldetset):
+def visualize_sets(a,nao,Na,Nb,name):
+    fulldetset=gen_dets_sets(nao,Na,Nb)
     full = np.array(list(fulldetset))
     occupied_dets = np.array(a)[:,0]
     occupied_amps = np.array(a)[:,1]
@@ -808,17 +925,24 @@ def visualize_sets(a,fulldetset):
         for j in range(len(fulldetset)):
             if (occupied_dets[i][0] == fulldetset[j][0] and occupied_dets[i][1] == fulldetset[j][1]):
                 occ_plot[j] = occupied_amps[i]
-
-
     plt.rc('font', family='serif',size = 24)
     fig = plt.figure(facecolor='white',figsize=(10,10))
     ax = fig.add_subplot(111)
     ax.xaxis.labelpad = 20
     ax.yaxis.labelpad = 20
-    plt.bar(np.arange(len(occ_plot)), np.abs(occ_plot), align='center')
+    np.savetxt("{}_plot1.txt".format(name),np.arange(len(occ_plot)))
+    np.savetxt("{}_plot2.txt".format(name),occ_plot)
+    plt.bar(np.arange(len(occ_plot)), np.abs(occ_plot), color = 'k',align='center')
     ax.set_yscale('log')
+    ax.xaxis.set_tick_params(pad=7,width=1.5,length=10)
+    ax.yaxis.set_tick_params(pad = 7,width=1.5,length=10)
+    for axis in ['top','bottom','left','right']:
+    	ax.spines[axis].set_linewidth(1.5)
+    plt.xlabel(r'Determinant Index')
+    plt.ylabel(r'Amplitude')
+    plt.title(r'Wavefunction plot',y=1.08)
     fig.tight_layout()
-    fig.savefig('plot.svg')
+    fig.savefig('{}.svg'.format(name))
     #plt.show()
 
 

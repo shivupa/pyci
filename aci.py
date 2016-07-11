@@ -122,7 +122,7 @@ while(np.abs(E_new - E_old) > convergence):
         print("Biggest Contributor is NOT HF det ", sorted(newdet,key=lambda j: -abs(j[1]))[0])
     coreset = set(C.keys())
     print("")
-visualize_sets(newdet,gen_dets_sets(nao,Na,Nb))
+visualize_sets(newdet,nao,Na,Nb)
 
 eig_vals_gamess = [-75.0129802245,
                    -74.7364625517,
