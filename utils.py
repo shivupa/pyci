@@ -529,6 +529,7 @@ def populatehamdict(targetdetset,hamdict,h1e,eri):
 def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0,visualize=False):
     print("PYCI")
     print("method: ASCI")
+    print("Paper: https://arxiv.org/abs/1603.02686")
     print("convergence: ", convergence)
     print("Core Space size: ",cdets)
     print("Target Space size: ",tdets)
@@ -647,6 +648,7 @@ def heatbath(det,norb,hamdict,amplitudes,epsilon,h1e,eri):
 def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4,visualize=False):
     print("PYCI")
     print("method: HBCI")
+    print("Paper: https://arxiv.org/abs/1606.07453")
     print("convergence: ", convergence)
     print("Epsilon: ",epsilon)
     print("Number of eigenvalues: ",printroots)
@@ -743,6 +745,10 @@ def cisd(mol,printroots=4,visualize=False):
     if visualize:
         newdet = [i for i in zip(list(targetdetset),eig_vecs[:,np.argsort(eig_vals)[0]])]
         visualize_sets(newdet,nao,Na,Nb,"CISD")
+
+    #import pickle
+    #with open('CISD_DETS.txt', 'wb') as handle:
+        #pickle.dump(newdet, handle)
     print("Completed CISD!")
 ###########################################################fci funcs
 def fci(mol,printroots=4,visualize=False):
@@ -776,9 +782,10 @@ def fci(mol,printroots=4,visualize=False):
         visualize_sets(newdet,nao,Na,Nb,"FCI")
     print("Completed FCI!")
 ########################################################### ACI
-def aci(mol,sigma = 100,gamma = 0.001,convergence = 1e-10,printroots=4,iter_min=0,visualize=False):
+def aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min=0,visualize=False):
     print("PYCI")
     print("method: ACI")
+    print("Paper: http://dx.doi.org/10.1063/1.4948308")
     print("convergence: ", convergence)
     print("Sigma: ",sigma)
     print("Gamma: ",gamma)
@@ -853,8 +860,8 @@ def aci(mol,sigma = 100,gamma = 0.001,convergence = 1e-10,printroots=4,iter_min=
         #step 5
         A_truncated = A_sorted[:count]
         A_dets = [i[0] for i in A_truncated]
-        A_dets += [i for i in coreset]
-        print("Q space size: ",len(A_truncated))
+        A_dets += list(coreset)
+        print("Q space size: ",len(A_dets))
         targetham = getsmallham(A_dets,hamdict)
         eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
         eig_vals_sorted = np.sort(eig_vals)[:printroots]
@@ -872,10 +879,15 @@ def aci(mol,sigma = 100,gamma = 0.001,convergence = 1e-10,printroots=4,iter_min=
             err += sorted_newdet[count][1]**2
             C[sorted_newdet[count][0]] = sorted_newdet[count][1]
             count +=1
+            print (abs(err))
+        print(count)
         if sorted(newdet,key=lambda j: -abs(j[1]))[0][0] != hfdet:
             print("Biggest Contributor is NOT HF det ", sorted(newdet,key=lambda j: -abs(j[1]))[0])
         coreset = set(C.keys())
         print("")
+    #import pickle
+    #with open('ACI_DETS.txt', 'wb') as handle:
+        #pickle.dump(newdet, handle)
     if visualize:
         visualize_sets(newdet,nao,Na,Nb,"ACI")
     print("Completed ACI!")
