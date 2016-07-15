@@ -879,7 +879,6 @@ def aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min
             err += sorted_newdet[count][1]**2
             C[sorted_newdet[count][0]] = sorted_newdet[count][1]
             count +=1
-            print (abs(err))
         print(count)
         if sorted(newdet,key=lambda j: -abs(j[1]))[0][0] != hfdet:
             print("Biggest Contributor is NOT HF det ", sorted(newdet,key=lambda j: -abs(j[1]))[0])
@@ -890,6 +889,9 @@ def aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min
         #pickle.dump(newdet, handle)
     if visualize:
         visualize_sets(newdet,nao,Na,Nb,"ACI")
+    print("first {:} pyci eigvals".format(printroots))
+    for i in (eig_vals_sorted + E_nuc):
+        print(i)
     print("Completed ACI!")
 ########################################################### visualization
 def visualize_sets(a,nao,Na,Nb,name):

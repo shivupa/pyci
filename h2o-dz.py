@@ -17,24 +17,24 @@ import time
 # INPUT
 #############
 #TODO: implement function that finds particles/holes based on set operations (will be easier with aocc,bocc lists of indices instead of docc,aocc(single),bocc(single)
-np.set_printoptions(precision=4,suppress=True)
+np.set_printoptions(precision=4,suppress=False)
 # Molecule Definition
 mol = gto.M(
     atom = [['O', (0.000000000000,  -0.143225816552,   0.000000000000)],
             ['H', (1.638036840407,   1.136548822547,  -0.000000000000)],
             ['H', (-1.638036840407,   1.136548822547,  -0.000000000000)]],
     #basis = '6-31G',
-    basis = 'sto-6g',
+    basis = 'sto-3g',
     verbose = 1,
     unit='b',
-    symmetry=True
+    symmetry=False
 )
 ###################################
 print(79*"~")
 print(30*" "+ "FCI")
 print(79*"~")
 start = time.time()
-fci(mol,printroots=4,visualize=True)
+fci(mol,printroots=4,visualize=False)
 end = time.time()
 print("RUN TIME FCI: (h:m:s)")
 m, s = divmod(end-start, 60)
@@ -45,7 +45,7 @@ print(79*"~")
 print(30*" "+ "CISD")
 print(79*"~")
 start = time.time()
-cisd(mol,printroots=4,visualize=True)
+cisd(mol,printroots=4,visualize=False)
 end = time.time()
 print("RUN TIME CISD: (h:m:s)")
 m, s = divmod(end-start, 60)
@@ -56,7 +56,7 @@ print(79*"~")
 print(30*" "+ "ASCI")
 print(79*"~")
 start = time.time()
-asci(mol,50,100,10e-9,iter_min=10,visualize=True)
+asci(mol,50,100,10e-9,iter_min=10,visualize=False)
 end = time.time()
 print("RUN TIME ASCI: (h:m:s)")
 m, s = divmod(end-start, 60)
@@ -67,7 +67,7 @@ print(79*"~")
 print(30*" "+ "HBCI")
 print(79*"~")
 start = time.time()
-hbci(mol,epsilon=0.01,convergence=0.01,printroots=4,visualize=True)
+hbci(mol,epsilon=0.01,convergence=0.01,printroots=4,visualize=False)
 end = time.time()
 print("RUN TIME HBCI: (h:m:s)")
 m, s = divmod(end-start, 60)
@@ -78,7 +78,7 @@ print(79*"~")
 print(30*" "+ "ACI")
 print(79*"~")
 start = time.time()
-aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min=0,visualize=True)
+aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min=0,visualize=False)
 end = time.time()
 print("RUN TIME AVI: (h:m:s)")
 m, s = divmod(end-start, 60)
