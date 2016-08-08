@@ -392,6 +392,16 @@ def populatehamdict(targetdetset,coreset,hamdict,h1e,eri):
                         update_dict[frozenset([i,j])] = calc_hij_single_sets(i,j,h1e,eri)
                     else:
                         update_dict[frozenset([i,j])] = calc_hij_double_sets(i,j,h1e,eri)
+    for i in coreset:
+        if i not in hamdict:
+            hamdict[frozenset((i))] = calc_hii_sets(i,h1e,eri)
+            for j in coreset:
+                nexc_ij = n_excit_sets(i,j)
+                if nexc_ij in (1,2):
+                    if nexc_ij==1:
+                        update_dict[frozenset([i,j])] = calc_hij_single_sets(i,j,h1e,eri)
+                    else:
+                        update_dict[frozenset([i,j])] = calc_hij_double_sets(i,j,h1e,eri)
     return update_dict
 
 
@@ -481,7 +491,7 @@ def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0,visualize=Fals
         visualize_sets(newdet,nao,Na,Nb,"ASCI")
     print("Completed ASCI!")
 ##############################################HBCI functions
-def heatbath(det,norb,hamdict,amplitudes,epsilon,h1e,preservedict=True):
+def heatbath(det,norb,hamdict,amplitudes,epsilon,h1e,eri,preservedict=True):
     if not preservedict:
         __hamdict={}
     excitation_space = set()
@@ -507,6 +517,7 @@ def heatbath(det,norb,hamdict,amplitudes,epsilon,h1e,preservedict=True):
             remove_set.add(i)
     return excitation_space-remove_set, hamdict
 def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4,visualize=False,preservedict=True):
+    print (preservedict)
     if not preservedict:
         __hamdict={}
     print("PYCI")
@@ -541,8 +552,8 @@ def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4,visualize=False,preserve
         newselecteddetset=set()
         newselecteddetset,hamdict_additions = heatbath(oldselecteddetset,nao,hamdict,C,epsilon,h1e,eri)
         hamdict.update(hamdict_additions)
+        hamdict.update(populatehamdict(newselecteddetset,oldselecteddetset,hamdict,h1e,eri))
         newselecteddetset |= oldselecteddetset
-        hamdict.update(populatehamdict((newselecteddetset),hamdict,h1e,eri))
         selectedham = getsmallham(list(newselecteddetset),hamdict)
         eig_vals,eig_vecs = sp.sparse.linalg.eigsh(selectedham,k=2*printroots)
         eig_vals_sorted = np.sort(eig_vals)[:printroots]
@@ -596,8 +607,8 @@ def cisd(mol,printroots=4,visualize=False,preservedict=True):
     targetdetset=set()
     for idet in coreset:
         targetdetset |= set(gen_singles_doubles(idet,nao))
+    hamdict.update(populatehamdict(targetdetset,coreset,hamdict,h1e,eri))
     targetdetset |= coreset
-    hamdict.update(populatehamdict(targetdetset,hamdict,h1e,eri))
     targetham = getsmallham(list(targetdetset),hamdict)
     eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
     eig_vals_sorted = np.sort(eig_vals)[:printroots]
@@ -700,7 +711,7 @@ def aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min
         for idet in coreset:
             targetdetset |= set(gen_singles_doubles(idet,nao))
         A = dict.fromkeys(targetdetset, 0.0)
-        hamdict.update(populatehamdict((targetdetset | coreset),hamdict,h1e,eri))
+        hamdict.update(populatehamdict(targetdetset , coreset,hamdict,h1e,eri))
 
 
         #equation 5
