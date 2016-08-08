@@ -178,28 +178,33 @@ def hole_part_sign_spin_occ_single_sets(idet,jdet):
 # <r|hcore|i> + sum_j^{occ(both)} (ri|jj) - (rj|ji)
 # multiply by appropriate sign
 # (parity of permutation that puts orbitals back in normal order from direct hole->particle substitution)
+__hamdict = {}
 def calc_hii_sets(idet,hcore,eri):
     """ Calculate the diagonal hamiltonian element using the eris stored with
     4-fold symmetry
     square eri array (size n*(n-1)/2 square) (4-fold symmetry?)
     idet is a tuple of sets of occupied alpha beta orbitals
     """
-    hii=0.0
     aocc,bocc = idet
-    for ia in aocc:
-        hii += hcore[ia,ia]
-    for ib in bocc:
-        hii += hcore[ib,ib]
-    for ia in aocc:
-        for ja in aocc:
-            hii += 0.5*(eri[idx4(ia,ia,ja,ja)]-eri[idx4(ia,ja,ja,ia)])
-    for ib in bocc:
-        for jb in bocc:
-            hii += 0.5*(eri[idx4(ib,ib,jb,jb)]-eri[idx4(ib,jb,jb,ib)])
-    for ia in aocc:
-        for jb in bocc:
-            hii += eri[idx4(ia,ia,jb,jb)]
-    return hii
+    if frozenset([idet]) in __hamdict:
+        return __hamdict[frozenset([idet])]
+    else:
+        hii = 0.0
+        for ia in aocc:
+            hii  += hcore[ia,ia]
+        for ib in bocc:
+            hii  += hcore[ib,ib]
+        for ia in aocc:
+            for ja in aocc:
+                hii  += 0.5*(eri[idx4(ia,ia,ja,ja)]-eri[idx4(ia,ja,ja,ia)])
+        for ib in bocc:
+            for jb in bocc:
+                hii  += 0.5*(eri[idx4(ib,ib,jb,jb)]-eri[idx4(ib,jb,jb,ib)])
+        for ia in aocc:
+            for jb in bocc:
+                hii  += eri[idx4(ia,ia,jb,jb)]
+        __hamdict[frozenset([idet])] = hii
+        return __hamdict[frozenset([idet])]
 
 def calc_hij_single_sets(idet,jdet,hcore,eri):
     """ Calculate the off-diagonal hamiltonian elements using the eris stored with
@@ -234,7 +239,7 @@ def calc_hij_double_sets(idet,jdet,hcore,eri):
     hij *= sign
     return hij
 
-__hamdict = {}
+
 def calc_hij_sets(idet,jdet,hcore,eri,nexc_ij=None):
     """ Calculate the off-diagonal hamiltonian elements using the eris stored with
     4-fold symmetry
@@ -363,6 +368,7 @@ def getsmallham(dets,hamdict):
     hcol=[]
     hval=[]
     ndets=len(dets)
+    count = 0
     for i in range(ndets):
         idet = dets[i]
         hrow.append(i)
@@ -378,6 +384,29 @@ def getsmallham(dets,hamdict):
                 hij = hamdict[frozenset((idet,jdet))]
                 hval.append(hij)
                 hval.append(hij)
+            else:
+                if n_excit_sets(idet,jdet) <= 2:
+                    print(idet,jdet)
+    return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
+def getsmallhamslow(dets,hcore,eri):
+    hrow=[]
+    hcol=[]
+    hval=[]
+    ndets=len(dets)
+    for i in range(ndets):
+        idet = dets[i]
+        hrow.append(i)
+        hcol.append(i)
+        hval.append(calc_hij_sets(idet,idet,hcore,eri))
+        for j in range(i+1,ndets):
+            jdet = dets[j]
+            hrow.append(i)
+            hrow.append(j)
+            hcol.append(j)
+            hcol.append(i)
+            hij = calc_hij_sets(idet,jdet,hcore,eri)
+            hval.append(hij)
+            hval.append(hij)
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 
 def populatehamdict(targetdetset,coreset,hamdict,h1e,eri):
@@ -468,6 +497,7 @@ def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0,visualize=Fals
         A_truncated = A_sorted[:tdets]
         #print("Target Dets: ",len(A_truncated))
         A_dets = [i[0] for i in A_truncated]
+        hamdict.update(populatehamdict(A_dets,A_dets,hamdict,h1e,eri))
         targetham = getsmallham(A_dets,hamdict)
         eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
         eig_vals_sorted = np.sort(eig_vals)[:printroots]
@@ -555,6 +585,7 @@ def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4,visualize=False,preserve
         hamdict.update(hamdict_additions)
         hamdict.update(populatehamdict(newselecteddetset,oldselecteddetset,hamdict,h1e,eri))
         newselecteddetset |= oldselecteddetset
+        hamdict.update(populatehamdict(newselecteddetset,newselecteddetset,hamdict,h1e,eri))
         selectedham = getsmallham(list(newselecteddetset),hamdict)
         eig_vals,eig_vecs = sp.sparse.linalg.eigsh(selectedham,k=2*printroots)
         eig_vals_sorted = np.sort(eig_vals)[:printroots]
@@ -610,7 +641,11 @@ def cisd(mol,printroots=4,visualize=False,preservedict=True):
         targetdetset |= set(gen_singles_doubles(idet,nao))
     hamdict.update(populatehamdict(targetdetset,coreset,hamdict,h1e,eri))
     targetdetset |= coreset
+    hamdict.update(populatehamdict(targetdetset,targetdetset,hamdict,h1e,eri))
     targetham = getsmallham(list(targetdetset),hamdict)
+    #targetham = getsmallhamslow(list(targetdetset),h1e,eri)
+    #print(targetham)
+    #print(np.shape(targetham))
     eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
     eig_vals_sorted = np.sort(eig_vals)[:printroots]
     E_new = eig_vals_sorted[0]
@@ -713,10 +748,7 @@ def aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min
             targetdetset |= set(gen_singles_doubles(idet,nao))
         A = dict.fromkeys(targetdetset, 0.0)
         hamdict.update(populatehamdict(targetdetset , coreset,hamdict,h1e,eri))
-
-
         #equation 5
-
         for jdet in targetdetset:
             V = 0
             for idet in coreset:
@@ -740,7 +772,9 @@ def aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min
         A_truncated = A_sorted[:count]
         A_dets = [i[0] for i in A_truncated]
         A_dets += list(coreset)
+        A_dets = list(set(A_dets))
         print("Q space size: ",len(A_dets))
+        hamdict.update(populatehamdict(A_dets,A_dets,hamdict,h1e,eri))
         targetham = getsmallham(A_dets,hamdict)
         eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
         eig_vals_sorted = np.sort(eig_vals)[:printroots]
