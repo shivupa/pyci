@@ -16,7 +16,7 @@ import matplotlib.patches as mpatches
 ################################################################################
 # FUNCTIONS FOR CALCULATING HAMILTONIAN MATRIX ELEMENTS
 ################################################################################
-#TODO: only cache i<j elements?
+
 __idx2_cache = {}
 def idx2(i,j):
     """2-index transformation for accessing elements of a symmetric matrix
@@ -30,8 +30,6 @@ def idx2(i,j):
         __idx2_cache[i,j] = int(j*(j+1)/2+i)
     return __idx2_cache[i,j]
 
-#TODO: decide whether to use (optional?) cache
-#__idx4_cache = {}
 def idx4(i,j,k,l):
     """idx4(i,j,k,l) returns 2-tuple corresponding to (ij|kl) in
     square eri array (size n*(n-1)/2 square) (4-fold symmetry?)"""
@@ -178,6 +176,7 @@ def hole_part_sign_spin_occ_single_sets(idet,jdet):
 # <r|hcore|i> + sum_j^{occ(both)} (ri|jj) - (rj|ji)
 # multiply by appropriate sign
 # (parity of permutation that puts orbitals back in normal order from direct hole->particle substitution)
+
 __hamdict = {}
 def calc_hii_sets(idet,hcore,eri):
     """ Calculate the diagonal hamiltonian element using the eris stored with
@@ -239,7 +238,6 @@ def calc_hij_double_sets(idet,jdet,hcore,eri):
     hij *= sign
     return hij
 
-
 def calc_hij_sets(idet,jdet,hcore,eri,nexc_ij=None):
     """ Calculate the off-diagonal hamiltonian elements using the eris stored with
     4-fold symmetry
@@ -263,6 +261,7 @@ def calc_hij_sets(idet,jdet,hcore,eri,nexc_ij=None):
 ################################################################################
 # FUNCTIONS FOR GENERATING CONNECTED DETERMINANTS
 ################################################################################
+
 def get_excitations(det,norb,aexc,bexc):
     """
     usage: get_excitations(det,norb,aexc,bexc)
@@ -337,6 +336,7 @@ def construct_ham_dict(coredetlist_sets,h1e,eri):
                     hij = calc_hij_double_sets(idet,jdet,h1e,eri)
                 ham_dict[frozenset((idet,jdet))] = hij
     return ham_dict
+
 def construct_hamiltonian(ndets,coredetlist_sets,h1e,eri):
     hrow = []
     hcol = []
@@ -388,6 +388,7 @@ def getsmallham(dets,hamdict):
                 if n_excit_sets(idet,jdet) <= 2:
                     print(idet,jdet)
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
+
 def getsmallhamslow(dets,hcore,eri):
     hrow=[]
     hcol=[]
@@ -410,7 +411,6 @@ def getsmallhamslow(dets,hcore,eri):
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 
 def populatehamdict(targetdetset,coreset,hamdict,h1e,eri):
-    #TODO add the caching of Hamiltonian elements
     update_dict = dict()
     for i in targetdetset:
         if i not in hamdict:
@@ -434,8 +434,8 @@ def populatehamdict(targetdetset,coreset,hamdict,h1e,eri):
                         update_dict[frozenset([i,j])] = calc_hij_double_sets(i,j,h1e,eri)
     return update_dict
 
-
 ###########################################################ASCI funcs
+
 def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0,visualize=False,preservedict=True):
     if not preservedict:
         __hamdict={}
@@ -521,7 +521,9 @@ def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0,visualize=Fals
     if visualize:
         visualize_sets(newdet,nao,Na,Nb,"ASCI")
     print("Completed ASCI!")
+
 ##############################################HBCI functions
+
 def heatbath(det,norb,hamdict,amplitudes,epsilon,h1e,eri,preservedict=True):
     if not preservedict:
         __hamdict={}
@@ -547,6 +549,7 @@ def heatbath(det,norb,hamdict,amplitudes,epsilon,h1e,eri,preservedict=True):
         if add == False:
             remove_set.add(i)
     return excitation_space-remove_set, hamdict
+
 def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4,visualize=False,preservedict=True):
     print (preservedict)
     if not preservedict:
@@ -612,7 +615,9 @@ def hbci(mol,epsilon=0.01,convergence=0.01,printroots=4,visualize=False,preserve
     if visualize:
         visualize_sets(newdet,nao,Na,Nb,"HBCI")
     print("Completed HBCI!")
+
 ###########################################################CISD funcs
+
 def cisd(mol,printroots=4,visualize=False,preservedict=True):
     if not preservedict:
         __hamdict={}
@@ -662,7 +667,9 @@ def cisd(mol,printroots=4,visualize=False,preservedict=True):
     #with open('CISD_DETS.txt', 'wb') as handle:
         #pickle.dump(newdet, handle)
     print("Completed CISD!")
-###########################################################fci funcs
+
+###########################################################FCI funcs
+
 def fci(mol,printroots=4,visualize=False,preservedict=True):
     if not preservedict:
         __hamdict={}
@@ -695,7 +702,9 @@ def fci(mol,printroots=4,visualize=False,preservedict=True):
         newdet = [i for i in zip(list(fulldetlist_sets),eig_vecs[:,np.argsort(eig_vals)[0]])]
         visualize_sets(newdet,nao,Na,Nb,"FCI")
     print("Completed FCI!")
+
 ########################################################### ACI
+
 def aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min=0,visualize=False):
     print("PYCI")
     print("method: ACI")
@@ -806,7 +815,9 @@ def aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min
     for i in (eig_vals_sorted + E_nuc):
         print(i)
     print("Completed ACI!")
+
 ########################################################### visualization
+
 def visualize_sets(a,nao,Na,Nb,name):
     fulldetset=gen_dets_sets(nao,Na,Nb)
     full = np.array(list(fulldetset))
@@ -837,7 +848,6 @@ def visualize_sets(a,nao,Na,Nb,name):
     fig.tight_layout()
     fig.savefig('{}.svg'.format(name))
     #plt.show()
-
 
 if __name__ == "__main__":
     print("\nPYCI utils file. This file was not meant to be run independently.")
