@@ -381,6 +381,7 @@ def getsmallham(dets,hamdict):
     return sp.sparse.csr_matrix((hval,(hrow,hcol)),shape=(ndets,ndets))
 
 def populatehamdict(targetdetset,coreset,hamdict,h1e,eri):
+    #TODO add the caching of Hamiltonian elements
     update_dict = dict()
     for i in targetdetset:
         if i not in hamdict:
