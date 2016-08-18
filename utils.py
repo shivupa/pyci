@@ -625,35 +625,27 @@ def cisd(mol,printroots=4,visualize=False,preservedict=True):
     print("method: CISD")
     print("Number of eigenvalues: ",printroots)
     print("")
-    Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
-    E_nuc = mol.energy_nuc()
-    nao = mol.nao_nr()
-    myhf = scf.RHF(mol)
-    E_hf = myhf.kernel()
-    mo_coefficients = myhf.mo_coeff
-    h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
+    Na,Nb = mol.nelec # get number of electrons
+    E_nuc = mol.energy_nuc() # get nuclear repulsion energy
+    nao = mol.nao_nr() # get number of spatial atomic orbitals which we assume is the same as the number of spatial molecular orbitals which is true when using RHF
+    myhf = scf.RHF(mol) # create RHF object for molecule
+    E_hf = myhf.kernel() # get Hartree-Fock energy
+    mo_coefficients = myhf.mo_coeff # get MO coefficients
+    h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients)) # create matrix of 1 electron integrals
     print("transforming eris")
-    eri = ao2mo.kernel(mol, mo_coefficients)
-    hamdict = dict()
-    E_old = 0.0
-    E_new = E_hf
-    hfdet = (frozenset(range(Na)),frozenset(range(Nb)))
-    targetdetset = set()
-    coreset = {hfdet}
+    eri = ao2mo.kernel(mol, mo_coefficients) # get 2 electron integrals
+    hamdict = dict() # create dictionary of hamiltonian elements
+    hfdet = (frozenset(range(Na)),frozenset(range(Nb))) # create Hartree-Fock determinant bit representation
+    targetdetset = set() # initalize set of target determinants
+    coreset = {hfdet} # initalize set of core determinants
     print("\nHartree-Fock Energy: ", E_hf)
-    targetdetset=set()
-    for idet in coreset:
-        targetdetset |= set(gen_singles_doubles(idet,nao))
-    hamdict.update(populatehamdict(targetdetset,coreset,hamdict,h1e,eri))
-    targetdetset |= coreset
-    hamdict.update(populatehamdict(targetdetset,targetdetset,hamdict,h1e,eri))
-    targetham = getsmallham(list(targetdetset),hamdict)
-    #targetham = getsmallhamslow(list(targetdetset),h1e,eri)
-    #print(targetham)
-    #print(np.shape(targetham))
-    eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
-    eig_vals_sorted = np.sort(eig_vals)[:printroots]
-    E_new = eig_vals_sorted[0]
+    for idet in coreset: # for each determinant in the core set of determinants...
+        targetdetset |= set(gen_singles_doubles(idet,nao)) # ...generate all single and double excitations and add them to the target set
+    targetdetset |= coreset # create a set from the union of the target and core determinants
+    hamdict.update(populatehamdict(targetdetset,targetdetset,hamdict,h1e,eri)) # update the dictionary of hamiltonian elements with those of the target determinants
+    targetham = getsmallham(list(targetdetset),hamdict) # construct the hamiltonian in the target space
+    eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots) # diagonalize the hamiltonian yielding the eigenvalues and eigenvectors
+    eig_vals_sorted = np.sort(eig_vals)[:printroots] # sort the eigenvalues
     print("")
     print("first {:} pyci eigvals".format(printroots))
     for i in (eig_vals_sorted + E_nuc):
@@ -662,10 +654,6 @@ def cisd(mol,printroots=4,visualize=False,preservedict=True):
     if visualize:
         newdet = [i for i in zip(list(targetdetset),eig_vecs[:,np.argsort(eig_vals)[0]])]
         visualize_sets(newdet,nao,Na,Nb,"CISD")
-
-    #import pickle
-    #with open('CISD_DETS.txt', 'wb') as handle:
-        #pickle.dump(newdet, handle)
     print("Completed CISD!")
 
 ###########################################################FCI funcs

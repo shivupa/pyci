@@ -39,8 +39,8 @@ c = myhf.mo_coeff
 #if you change the sign of these two orbitals, the hamiltonian matrix elements agree with those from GAMESS
 #c.T[2]*=-1
 #c.T[5]*=-1
-cisolver = fci.FCI(mol, c)
-efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
+#cisolver = fci.FCI(mol, c)
+#efci = cisolver.kernel(nroots=printroots)[0] + mol.energy_nuc()
 h1e = reduce(np.dot, (c.T, myhf.get_hcore(), c))
 eri = ao2mo.kernel(mol, c)
 threshold = 1e-13 #threshold for hii and hij
@@ -86,5 +86,7 @@ eig_vals_gamess = [-75.0129802245,
                    -74.6886742417,
                    -74.6531877287]
 print("first {:} pyci eigvals vs PYSCF eigvals vs GAMESS eigvals".format(printroots))
-for i,j,k in zip(eig_vals_sorted, efci, eig_vals_gamess):
-    print(i,j,k)
+#for i,j,k in zip(eig_vals_sorted, efci, eig_vals_gamess):
+    #print(i,j,k)
+for i in eig_vals_sorted:
+    print(i)
