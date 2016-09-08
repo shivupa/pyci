@@ -447,48 +447,43 @@ def asci(mol,cdets,tdets,convergence=1e-6,printroots=4,iter_min=0,visualize=Fals
     print("Target Space size: ",tdets)
     print("Number of eigenvalues: ",printroots)
     print("")
-    Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
-    E_nuc = mol.energy_nuc()
-    nao = mol.nao_nr()
-    myhf = scf.RHF(mol)
-    E_hf = myhf.kernel()
-    mo_coefficients = myhf.mo_coeff
-    h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
+    Na,Nb = mol.nelec # get number of electrons
+    E_nuc = mol.energy_nuc() # get nuclear repulsion energy
+    nao = mol.nao_nr() # get number of spatial atomic orbitals which we assume is the same as the number of spatial molecular orbitals which is true when using RHF
+    myhf = scf.RHF(mol) # create RHF object for molecule
+    E_hf = myhf.kernel() # get Hartree-Fock energy
+    mo_coefficients = myhf.mo_coeff # get MO coefficients
+    h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients)) # create matrix of 1 electron integrals
     print("transforming eris")
-    eri = ao2mo.kernel(mol, mo_coefficients)
-    hamdict = dict()
-    E_old = 0.0
-    E_new = E_hf
-    hfdet = (frozenset(range(Na)),frozenset(range(Nb)))
-    targetdetset = set()
-    coreset = {hfdet}
-    C = {hfdet:1.0}
+    eri = ao2mo.kernel(mol, mo_coefficients) # get 2 electron integrals
+    hamdict = dict() # create dictionary of hamiltonian elements
+    hfdet = (frozenset(range(Na)),frozenset(range(Nb))) # create Hartree-Fock determinant bit representation
+    E_old = 0.0 # initalize previous iteration energy
+    E_new = E_hf # initalize current iteration energy
+    targetdetset = set() # initalize set of target determinants
+    coreset = {hfdet} # initalize set of core determinants
+    C = {hfdet:1.0} # initalize dictionary of amplitudes as only HF det
     print("\nHartree-Fock Energy: ", E_hf)
     print("\nBeginning Iterations\n")
     it_num = 0
     while(np.abs(E_new - E_old) > convergence):
-        #print("is hfdet in coreset? ", hfdet in coreset)
         it_num += 1
         E_old = E_new
-        #print("Core Dets: ",len(coreset))
         #step 1
-        targetdetset=set()
-        for idet in coreset:
-            targetdetset |= set(gen_singles_doubles(idet,nao))
-        A = dict.fromkeys(targetdetset, 0.0)
-        hamdict.update(populatehamdict(targetdetset , coreset,hamdict,h1e,eri))
-        for idet in coreset:
-            for jdet in targetdetset:
-                nexc_ij = n_excit_sets(idet,jdet)
-                if nexc_ij in (1,2): # don't bother checking anything with a zero hamiltonian element
-                    try:
-                        A[jdet] += hamdict[frozenset([idet,jdet])] * C[idet]
-                    except:
-                        A[jdet] += hamdict[frozenset([jdet,idet])] * C[idet]
-        for idet in targetdetset:
-            A[idet] /= (hamdict[frozenset((idet))] - E_old)
-        for idet in coreset:
-            if idet in A:
+        targetdetset=set() # clear set of target determinants
+        for idet in coreset: # for each determinant in the core set of determinants...
+            targetdetset |= set(gen_singles_doubles(idet,nao)) # ...generate all single and double excitations and add them to the target set
+        A = dict.fromkeys(targetdetset, 0.0) # initalize a dictionary for the perturbed amplitudes of each determinant
+        hamdict.update(populatehamdict(targetdetset , coreset,hamdict,h1e,eri)) # update the hamiltonian dictionary
+        for idet in coreset: # for each determinant in the core set...
+            for jdet in targetdetset: # ... and each in the target set...
+                nexc_ij = n_excit_sets(idet,jdet) # find the exitation level between the two determinants
+                if nexc_ij in (1,2): # don't bother checking anything with a zero hamiltonian element (Slater Condon rules)
+                    A[jdet] += hamdict[frozenset([idet,jdet])] * C[idet] # evaluate perturbed amplitudes (see paper eq 4)
+        for idet in targetdetset: # for each determinant in the target set
+            A[idet] /= (hamdict[frozenset((idet))] - E_old) # evaluate the denominator of eq 4 of the paper
+        for idet in coreset: # for each determinant in the coreset...
+            if idet in A: # if the determinant has a perturbed amplitude (which means its a )
                 if abs(A[idet]) < abs(C[idet]): # replace with the biggest again
                     A[idet] = C[idet]
             else:
