@@ -1,0 +1,15 @@
+memory 2000 mb
+
+molecule {
+0 2
+C 0.0 0.0 0.0
+N 0.0 0.0 1.1941
+}
+
+set {
+  basis sto-3g
+  reference rohf
+  scf_type direct
+}
+
+energy('fci')

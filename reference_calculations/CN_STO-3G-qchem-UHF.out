@@ -1,0 +1,274 @@
+/home/eric/opt/apps/qchem/trunk_gcc_release/exe/qcprog.exe .cn-sto3g-qchem-uhf.in.24182.qcin.1 /tmp/qchem/qchem24182/
+
+Process 0 of 1 is on copper - thread support 0
+initial socket setup ...start
+initial socket setup ...done 
+now start server 0 ... 
+localhost.localdomain 127.0.0
+Q-Chem Developer Version! Running on 127.0.0.*
+                  Welcome to Q-Chem
+     A Quantum Leap Into The Future Of Chemistry
+
+
+ Q-Chem 4.4, Q-Chem, Inc., Pleasanton, CA (2016)
+
+ Y. Shao,  Z. Gan,  E. Epifanovsky,  A. T. B. Gilbert,  M. Wormit,  
+ J. Kussmann,  A. W. Lange,  A. Behn,  J. Deng,  X. Feng,  D. Ghosh,  
+ M. Goldey,  P. R. Horn,  L. D. Jacobson,  I. Kaliman,  F.Rob,  
+ R. Z. Khaliullin,  T. Kus,  A. Landau,  J. Liu,  E. I. Proynov,  Y. M. Rhee,  
+ R. M. Richard,  M. A. Rohrdanz,  R. P. Steele,  E. J. Sundstrom,  
+ H. L. Woodcock III,  P. M. Zimmerman,  D. Zuev,  B. Albrecht,  E. Alguire,  
+ B. Austin,  S. A. Baeppler,  G. J. O. Beran,  Y. A. Bernard,  E. Berquist,  
+ K. Brandhorst,  K. B. Bravaya,  S. T. Brown,  D. Casanova,  C.-M. Chang,  
+ Y. Chen,  S. H. Chien,  K. D. Closser,  M. P. Coons,  D. L. Crittenden,  
+ S. Dasgupta,  M. Diedenhofen,  R. A. DiStasio Jr.,  H. Do,  A. D. Dutoi,  
+ R. G. Edgar,  P.-T. Fang,  S. Fatehi,  Q. Feng,  L. Fusti-Molnar,  
+ A. Ghysels,  A. Golubeva-Zadorozhnaya,  J. Gomes,  A. Gunina,  
+ M. W. D. Hanson-Heine,  P. H. P. Harbach,  A. W. Hauser,  E. G. Hohenstein,  
+ Z. C. Holden,  K. Hui,  T.-C. Jagau,  H. Ji,  B. Kaduk,  K. Khistyaev,  
+ Jaehoon Kim,  Jihan Kim,  R. A. King,  P. Klunzinger,  D. Kosenkov,  
+ T. Kowalczyk,  C. M. Krauter,  A. Kunitsa,  K. U. Lao,  A. Laurent,  
+ K. V. Lawler,  D. Lefrancois,  S. Lehtola,  S. V. Levchenko,  C. Y. Lin,  
+ Y.-S. Lin,  F. Liu,  E. Livshits,  R. C. Lochan,  A. Luenser,  P. Manohar,  
+ S. F. Manzer,  S.-P. Mao,  Y. Mao,  N. Mardirossian,  A. V. Marenich,  
+ L. A. Martinez-Martinez,  S. A. Maurer,  N. J. Mayhall,  J.-M. Mewes,  
+ A. F. Morrison,  K. Nanda,  C. M. Oana,  R. Olivares-Amaya,  D. P. O'Neill,  
+ J. A. Parkhill,  T. M. Perrine,  R. Peverati,  P. A. Pieniazek,  F. Plasser,  
+ A. Prociuk,  D. R. Rehn,  E. Rosta,  N. J. Russ,  N. Sergueev,  
+ S. M. Sharada,  S. Sharma,  D. W. Small,  A. Sodt,  T. Stauch,  T. Stein,  
+ D. Stuck,  Y.-C. Su,  A. J. W. Thom,  T. Tsuchimochi,  L. Vogt,  O. Vydrov,  
+ T. Wang,  M. A. Watson,  J. Wenzel,  A. White,  C. F. Williams,  
+ V. Vanovschi,  S. Yeganeh,  S. R. Yost,  Z.-Q. You,  I. Y. Zhang,  X. Zhang,  
+ Y. Zhao,  B. R. Brooks,  G. K. L. Chan,  D. M. Chipman,  C. J. Cramer,  
+ W. A. Goddard III,  M. S. Gordon,  W. J. Hehre,  A. Klamt,  
+ H. F. Schaefer III,  M. W. Schmidt,  C. D. Sherrill,  D. G. Truhlar,  
+ A. Warshel,  X. Xu,  A. Aspuru-Guzik,  R. Baer,  A. T. Bell,  N. A. Besley,  
+ J.-D. Chai,  A. Dreuw,  B. D. Dunietz,  T. R. Furlani,  S. R. Gwaltney,  
+ C.-P. Hsu,  Y. Jung,  J. Kong,  D. S. Lambrecht,  W. Liang,  C. Ochsenfeld,  
+ V. A. Rassolov,  L. V. Slipchenko,  J. E. Subotnik,  T. Van Voorhis,  
+ J. M. Herbert,  A. I. Krylov,  P. M. W. Gill,  M. Head-Gordon
+
+ Contributors to earlier versions of Q-Chem not listed above: 
+ R. D. Adamson,  J. Baker,  E. F. C. Byrd,  A. K. Chakraborty,  C.-L. Cheng,  
+ H. Dachsel,  R. J. Doerksen,  G. Hawkins,  A. Heyden,  S. Hirata,  
+ G. Kedziora,  F. J. Keil,  C. Kelley,  P. P. Korambath,  W. Kurlancheek,  
+ A. M. Lee,  M. S. Lee,  D. Liotard,  I. Lotan,  P. E. Maslen,  N. Nair,  
+ D. Neuhauser,  R. Olson,  B. Peters,  J. Ritchie,  N. E. Schultz,  
+ N. Shenvi,  A. C. Simmonett,  K. S. Thanthiriwatte,  Q. Wu,  W. Zhang
+
+ Please cite Q-Chem as follows:
+ Y. Shao et al., Mol. Phys. 113, 184-215 (2015)
+ DOI: 10.1080/00268976.2014.952696
+
+ Q-Chem 4.4.1 for Intel X86 EM64T Linux
+
+ Parts of Q-Chem use Armadillo 5.200.1 (Boston Tea Smuggler).
+ http://arma.sourceforge.net/
+
+ Q-Chem begins on Fri Sep  9 09:04:36 2016  
+
+copper
+Host: 0
+
+     Scratch files written to /tmp/qchem/qchem24182//
+ Parallel job on  1  processors
+
+Checking the input file for inconsistencies... 	...done.
+
+--------------------------------------------------------------
+User input:
+--------------------------------------------------------------
+$rem
+  method hf
+  basis sto-3g
+  scf_convergence 9
+  thresh 14
+  scf_algorithm rca_diis
+  scf_max_cycles 1000
+  symmetry false
+  sym_ignore true
+$end  
+
+$molecule
+0 2
+C 0.0 0.0 0.0
+N 0.0 0.0 1.1941
+$end
+--------------------------------------------------------------
+ ----------------------------------------------------------------
+             Standard Nuclear Orientation (Angstroms)
+    I     Atom           X                Y                Z
+ ----------------------------------------------------------------
+    1      C       0.0000000000     0.0000000000     0.0000000000
+    2      N       0.0000000000     0.0000000000     1.1941000000
+ ----------------------------------------------------------------
+ Nuclear Repulsion Energy =    18.6127148929 hartrees
+ There are        7 alpha and        6 beta electrons
+ Requested basis set is STO-3G
+ There are 4 shells and 10 basis functions
+
+ Total QAlloc Memory Limit   2000 MB
+ Mega-Array Size        61 MB
+ MEM_STATIC part        62 MB
+
+                       Distance Matrix (Angstroms)
+             C (  1)
+   N (  2)  1.194100
+
+ A cutoff of  1.0D-14 yielded     10 shell pairs
+ There are        67 function pairs
+
+ -------------------------------------------------------
+ OpenMP Integral Computing Module                       
+ Release: version 1.0, May 2013, Q-Chem Inc. Pittsburgh 
+ -------------------------------------------------------
+ Integral Job Info:
+ Integral job number is                      11
+ Integral operator is                         1
+ short-range coefficients                     0
+ long-range coefficients              100000000
+ Omega coefficients                           0
+ if combine SR and LR in K                    0
+ Integral screening is                        0
+ Integral computing path is                   2
+ max size of driver memory is            800000
+ size of driver memory is                 45569
+ size of scratch memory is               945100
+ max col of scratch BK array                289
+ max len of scratch array in speh3           22
+ max len of scratch index in speh4            8
+ max int batch size is                      520
+ min int batch size is                       52
+ fixed nKL is                                52
+ max L of basis functions is                  1
+ order of int derivative is                   0
+ number of shells is                          4
+ number of basis is                          10
+ number of cartesian basis is                10
+ number of contracted shell pairs            10
+ number of primitive shell pairs             86
+ maxK2 (contraction) of shell pair            9
+ max number of K2 of shell pair               1
+ max number of CS2 of shell pair              4
+ max number of PS2 of shell pair             36
+ mem total for path MDJ                    7374
+ -------------------------------------------------------
+ Smallest overlap matrix eigenvalue = 1.80E-01
+
+ Scale SEOQF with 1.000000e+00/1.000000e+00/1.000000e+00
+
+ Standard Electronic Orientation quadrupole field applied
+ Nucleus-field energy     =    -0.0000000107 hartrees
+ Guess from superposition of atomic densities
+ Warning:  Energy on first SCF cycle will be non-variational
+ An unrestricted Hartree-Fock SCF calculation will be
+ performed using Relaxed Constraint Minimization + Pulay DIIS
+ SCF converges when DIIS error is below 1.0E-09
+ ---------------------------------------
+  Cycle       Energy         DIIS Error
+ ---------------------------------------
+    1     -90.8919158263      3.54E-01
+    2     -90.9375514090      5.32E-02
+    3     -90.9598330379      6.38E-03
+    4     -90.9905048192      3.29E-03
+    5     -90.9924349357      3.33E-03
+    6     -90.9940290348      2.79E-03
+    7     -90.9956277613      3.21E-03
+    8     -90.9972796782      2.59E-03
+    9     -90.9989888618      3.06E-03
+   10     -91.0007655573      2.42E-03
+   11     -91.0026079897      2.87E-03
+   12     -91.0045218954      2.28E-03
+   13     -91.0064942104      2.65E-03
+   14     -91.0085122246      2.15E-03
+   15     -91.0105408188      2.37E-03
+   16     -91.0125427053      1.95E-03
+   17     -91.0144655248      2.02E-03
+   18     -91.0162619671      1.66E-03
+   19     -91.0178859891      1.61E-03
+   20     -91.0193073123      1.31E-03
+   21     -91.0205094378      1.20E-03
+   22     -91.0214938434      9.77E-04 Done RCA. Switching to DIIS
+   23     -91.0222750558      8.62E-04
+   24     -91.0244302195      5.25E-05
+   25     -91.0243912650      1.10E-04
+   26     -91.0244093593      9.21E-05
+   27     -91.0244222880      8.79E-05
+   28     -91.0244350630      7.24E-06
+   29     -91.0244352995      1.91E-06
+   30     -91.0244353112      1.91E-07
+   31     -91.0244353114      1.30E-07
+   32     -91.0244353114      2.18E-09
+   33     -91.0244353114      3.63E-10 Convergence criterion met
+ ---------------------------------------
+ <S^2> = 1.3768
+ SCF time:  CPU 0.05 s  wall 0.04 s
+ SCF   energy in the final basis set = -91.0244353114
+ Total energy in the final basis set = -91.0244353114
+
+ --------------------------------------------------------------
+
+                    Orbital Energies (a.u.)
+ --------------------------------------------------------------
+
+ Alpha MOs
+ -- Occupied --
+-15.368 -11.102  -1.156  -0.680  -0.461  -0.461  -0.456
+ -- Virtual --
+  0.355   0.355   1.055
+
+ Beta MOs
+ -- Occupied --
+-15.395 -11.041  -1.188  -0.527  -0.472  -0.472
+ -- Virtual --
+  0.141   0.389   0.389   1.120
+ --------------------------------------------------------------
+
+          Ground-State Mulliken Net Atomic Charges
+
+     Atom                 Charge (a.u.)    Spin (a.u.)
+  --------------------------------------------------------
+      1 C                     0.143707       2.174699
+      2 N                    -0.143707      -1.174699
+  --------------------------------------------------------
+  Sum of atomic charges =    -0.000000
+  Sum of spin   charges =     1.000000
+
+ -----------------------------------------------------------------
+                    Cartesian Multipole Moments
+ -----------------------------------------------------------------
+    Charge (ESU x 10^10)
+                -0.0000
+    Dipole Moment (Debye)
+         X      -0.0000      Y       0.0000      Z      -1.8640
+       Tot       1.8640
+    Quadrupole Moments (Debye-Ang)
+        XX      -9.4763     XY       0.0000     YY      -9.4763
+        XZ      -0.0000     YZ      -0.0000     ZZ     -12.1959
+    Octopole Moments (Debye-Ang^2)
+       XXX      -0.0000    XXY       0.0000    XYY      -0.0000
+       YYY       0.0000    XXZ      -5.8667    XYZ      -0.0000
+       YYZ      -5.8667    XZZ      -0.0000    YZZ      -0.0000
+       ZZZ     -22.7391
+    Hexadecapole Moments (Debye-Ang^3)
+      XXXX      -6.7304   XXXY       0.0000   XXYY      -2.2435
+      XYYY       0.0000   YYYY      -6.7304   XXXZ      -0.0000
+      XXYZ      -0.0000   XYYZ      -0.0000   YYYZ      -0.0000
+      XXZZ      -9.1661   XYZZ      -0.0000   YYZZ      -9.1661
+      XZZZ      -0.0000   YZZZ      -0.0000   ZZZZ     -57.5597
+ -----------------------------------------------------------------
+Archival summary:
+1\1\copper\SP\HF\STO-3G\11(2)\eric\FriSep909:04:362016FriSep909:04:362016\0\\#,HF,STO-3G,\\0,2\C\N,1,1.1941\\HF=-91.0244353\\@
+
+ Total job time:  0.28s(wall), 0.25s(cpu) 
+ Fri Sep  9 09:04:36 2016
+
+        *************************************************************
+        *                                                           *
+        *  Thank you very much for using Q-Chem.  Have a nice day.  *
+        *                                                           *
+        *************************************************************
+
+
+0 sent ACK to 0 
+now end server 0 ... 
