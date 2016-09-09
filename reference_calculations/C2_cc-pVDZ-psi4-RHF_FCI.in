@@ -1,0 +1,19 @@
+memory 2000 mb
+
+molecule {
+0 1
+C 0.0 0.0 0.0
+C 0.0 0.0 1.27273
+}
+
+set {
+  basis cc-pvdz
+  reference rhf
+  scf_type direct
+}
+
+set global {
+  freeze_core true
+}
+
+energy('fci')
