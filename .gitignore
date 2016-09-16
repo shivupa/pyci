@@ -2,6 +2,7 @@
 *.pyc
 *.png
 *.svg
+.DS_Store
 
 # quantum packages
 *.gbw
