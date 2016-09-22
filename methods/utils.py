@@ -305,15 +305,6 @@ def gen_singles_doubles(det,norb):
     """
     return gen_singles(det,norb) + gen_doubles(det,norb)
 
-def gen_dets_sets_truncated(norb,cdetlist_sets):
-    """generate cdets determinants with a given number of spatial orbitals
-    and alpha,beta electrons.
-    return a list of 2-tuples of strings"""
-    return_list = []
-    for i in cdetlist_sets:
-        return_list.extend(gen_singles_doubles(i,norb))
-
-    return list(set(return_list))
 
 ################################################################################
 # FUNCTIONS FOR GENERATING CONNECTED DETERMINANTS
@@ -800,37 +791,6 @@ def aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min
     print("Completed ACI!")
 
 ########################################################### visualization
-
-def visualize_sets(a,nao,Na,Nb,name):
-    fulldetset=gen_dets_sets(nao,Na,Nb)
-    full = np.array(list(fulldetset))
-    occupied_dets = np.array(a)[:,0]
-    occupied_amps = np.array(a)[:,1]
-    occ_plot = np.zeros(len(full))
-    count = 0
-    for i in range(len(occupied_dets)):
-        for j in range(len(fulldetset)):
-            if (occupied_dets[i][0] == fulldetset[j][0] and occupied_dets[i][1] == fulldetset[j][1]):
-                occ_plot[j] = occupied_amps[i]
-    plt.rc('font', family='serif',size = 24)
-    fig = plt.figure(facecolor='white',figsize=(10,10))
-    ax = fig.add_subplot(111)
-    ax.xaxis.labelpad = 20
-    ax.yaxis.labelpad = 20
-    np.savetxt("{}_plot1.txt".format(name),np.arange(len(occ_plot)))
-    np.savetxt("{}_plot2.txt".format(name),occ_plot)
-    plt.bar(np.arange(len(occ_plot)), np.abs(occ_plot), color = 'k',align='center')
-    ax.set_yscale('log')
-    ax.xaxis.set_tick_params(pad=7,width=1.5,length=10)
-    ax.yaxis.set_tick_params(pad = 7,width=1.5,length=10)
-    for axis in ['top','bottom','left','right']:
-    	ax.spines[axis].set_linewidth(1.5)
-    plt.xlabel(r'Determinant Index')
-    plt.ylabel(r'Amplitude')
-    plt.title(r'Wavefunction plot',y=1.08)
-    fig.tight_layout()
-    fig.savefig('{}.svg'.format(name))
-    #plt.show()
 
 if __name__ == "__main__":
     print("\nPYCI utils file. This file was not meant to be run independently.")
