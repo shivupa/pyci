@@ -16,6 +16,8 @@ from pyci.methods.utils import aci
 
 np.set_printoptions(precision=4, suppress=False)
 
+# pylint: disable=invalid-name
+
 #############
 # INPUT
 #############
