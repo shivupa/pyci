@@ -880,7 +880,9 @@ def aci(mol, sigma=100, gamma=0.0001, convergence=1e-10, printroots=4, iter_min=
         print("Q space size: ", len(A_dets))
         hamdict.update(populatehamdict(A_dets, A_dets, hamdict, h1e, eri))
         targetham = getsmallham(A_dets, hamdict)
-        eig_vals, eig_vecs = sp.sparse.linalg.eigsh(targetham, k=2*printroots)
+        print(np.shape(targetham))
+        print(printroots)
+        eig_vals, eig_vecs = sp.sparse.linalg.eigsh(targetham, k=printroots)
         eig_vals_sorted = np.sort(eig_vals)[:printroots]
         E_new = eig_vals_sorted[0]
         print("Iteration {:} Energy: ".format(it_num), E_new + E_nuc)
