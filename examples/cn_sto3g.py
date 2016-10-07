@@ -2,8 +2,6 @@
 
 import pyscf
 
-from pyci.tests.test_runner import test_runner
-
 
 r = 1.1941
 mol = pyscf.gto.M(
@@ -15,4 +13,7 @@ mol = pyscf.gto.M(
     symmetry=False,
 )
 
-test_runner(mol)
+if __name__ == '__main__':
+
+    from pyci.tests.test_runner import test_runner
+    test_runner(mol)

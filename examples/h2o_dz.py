@@ -2,8 +2,6 @@
 
 import pyscf
 
-from pyci.tests.test_runner import test_runner
-
 
 mol = pyscf.gto.M(
     atom=[['O', (0.000000000000, -0.143225816552, 0.000000000000)],
@@ -16,5 +14,7 @@ mol = pyscf.gto.M(
     symmetry=False,
 )
 
+if __name__ == '__main__':
 
-test_runner(mol)
+    from pyci.tests.test_runner import test_runner
+    test_runner(mol)
