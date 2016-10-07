@@ -1,15 +1,20 @@
+"""pyci.methods.utils: All of the interfaces to the methods and their
+shared helper functions.
+"""
+
 from __future__ import print_function
+from __future__ import division
 
 import itertools
-import scipy as sp
-import scipy.linalg as spla
-import scipy.sparse.linalg as splinalg
-import copy
-import numpy as np
 from functools import reduce
-import itertools
+
+import scipy as sp
+import numpy as np
+
 from pyscf import scf, ao2mo
-from pyci.methods.visualize import visualize_sets
+
+# pylint: disable=invalid-name
+
 
 ################################################################################
 # FUNCTIONS FOR CALCULATING HAMILTONIAN MATRIX ELEMENTS
@@ -175,6 +180,7 @@ def hole_part_sign_spin_occ_single_sets(idet, jdet):
     aocc, bocc = aocc_bocc_single_sets(idet, hole, spin)
     return hole, part, sign, spin, aocc, bocc
 
+# TODO put in notes!
 # Hii in spinorbs:
 # sum_i^{occ} <i|hcore|i> + 1/2 sum_{i,j}^{occ} (ii|jj) - (ij|ji)
 
@@ -192,9 +198,10 @@ def hole_part_sign_spin_occ_single_sets(idet, jdet):
 # Hij(a->r) in spinorbs:
 # <r|hcore|i> + sum_j^{occ(both)} (ri|jj) - (rj|ji)
 # multiply by appropriate sign
-# (parity of permutation that puts orbitals back in normal order from direct hole->particle substitution)
+# (parity of permutation that puts orbitals back in normal order from
+# direct hole->particle substitution)
 
-__hamdict = {}
+__hamdict = dict()
 def calc_hii_sets(idet, hcore, eri):
     """ Calculate the diagonal hamiltonian element using the eris stored with
     4-fold symmetry
@@ -303,7 +310,7 @@ def get_excitations(det, norb, aexc, bexc):
     bdets = []
 
     if aexc > len(avirt) or aexc > len(aocc) or bexc > len(bvirt) or bexc > len(bocc):
-        raise
+        raise Exception
     for iocc in itertools.combinations(aocc, aexc):
         for ivirt in itertools.combinations(avirt, aexc):
             adets.append(aocc - set(iocc) | set(ivirt))
@@ -315,21 +322,27 @@ def get_excitations(det, norb, aexc, bexc):
 
 
 def gen_singles(det, norb):
-    """ Generate determinants connected by a single excitation of an alpha or
-    beta electron
+    """Generate determinants connected by a single excitation of an alpha
+    or beta electron
     """
-    return get_excitations(det, norb, 1, 0) + get_excitations(det, norb, 0, 1)
+    return \
+        get_excitations(det, norb, 1, 0) + \
+        get_excitations(det, norb, 0, 1)
 
 
 def gen_doubles(det, norb):
-    """ Generate determinants connected by a double excitation of two alpha
-    electrons, two beta electrons or 1 alpha and 1 beta electron
+    """Generate determinants connected by a double excitation of two
+    alpha electrons, two beta electrons or 1 alpha and 1 beta electron
     """
-    return get_excitations(det, norb, 2, 0) + get_excitations(det, norb, 0, 2)  + get_excitations(det, norb, 1, 1)
+    return \
+        get_excitations(det, norb, 2, 0) + \
+        get_excitations(det, norb, 0, 2) + \
+        get_excitations(det, norb, 1, 1)
 
 
 def gen_singles_doubles(det, norb):
-    """Generate all single and double excitations connected to a determinant
+    """Generate all single and double excitations connected to a
+    determinant
     """
     return gen_singles(det, norb) + gen_doubles(det, norb)
 
@@ -464,11 +477,12 @@ def populatehamdict(targetdetset, coreset, hamdict, h1e, eri):
 
 ########################################################### ASCI funcs
 
-def asci(mol, cdets, tdets, convergence=1e-6, printroots=4, iter_min=0, visualize=False, preservedict=True):
+def asci(mol, cdets=50, tdets=100, convergence=1e-6, printroots=4,
+         iter_min=0, visualize=False, preservedict=True):
     """Where is my docstring?"""
 
     if not preservedict:
-        __hamdict={}
+        __hamdict = dict()
     print("PYCI")
     print("method: ASCI")
     #print("Paper: https://arxiv.org/abs/1603.02686")
@@ -477,44 +491,74 @@ def asci(mol, cdets, tdets, convergence=1e-6, printroots=4, iter_min=0, visualiz
     print("Target Space size: ", tdets)
     print("Number of eigenvalues: ", printroots)
     print("")
-    Na, Nb = mol.nelec # get number of electrons
-    E_nuc = mol.energy_nuc() # get nuclear repulsion energy
-    nao = mol.nao_nr() # get number of spatial atomic orbitals which we assume is the same as the number of spatial molecular orbitals which is true when using RHF
-    myhf = scf.RHF(mol) # create RHF object for molecule
-    E_hf = myhf.kernel() # get Hartree-Fock energy
-    mo_coefficients = myhf.mo_coeff # get MO coefficients
-    h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients)) # create matrix of 1 electron integrals
+    Na, Nb = mol.nelec
+    E_nuc = mol.energy_nuc()
+    # get number of spatial atomic orbitals which we assume is the
+    # same as the number of spatial molecular orbitals which is true
+    # when using RHF, as long as there are no linear dependencies
+    nao = mol.nao_nr()
+    myhf = scf.RHF(mol)
+    E_hf = myhf.kernel()
+    mo_coefficients = myhf.mo_coeff
+    # create matrix of 1 electron integrals
+    h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
     print("transforming eris")
-    eri = ao2mo.kernel(mol, mo_coefficients) # get 2 electron integrals
-    hamdict = dict() # create dictionary of hamiltonian elements
-    hfdet = (frozenset(range(Na)), frozenset(range(Nb))) # create Hartree-Fock determinant bit representation
-    E_old = 0.0 # initalize previous iteration energy
-    E_new = E_hf # initalize current iteration energy
-    targetdetset = set() # initalize set of target determinants
-    coreset = {hfdet} # initalize set of core determinants
-    C = {hfdet : 1.0} # initalize dictionary of amplitudes as only HF det
+    # get 2 electron integrals in MO basis
+    eri = ao2mo.kernel(mol, mo_coefficients)
+    # create dictionary of hamiltonian elements
+    hamdict = dict()
+    # create Hartree-Fock determinant bit representation
+    hfdet = (frozenset(range(Na)), frozenset(range(Nb)))
+    E_old = 0.0
+    E_new = E_hf
+    # initalize set of target determinants
+    targetdetset = set()
+    # initalize set of core determinants
+    coreset = {hfdet}
+    # initalize dictionary of amplitudes as only HF det
+    C = {hfdet : 1.0}
     print("\nHartree-Fock Energy: ", E_hf)
     print("\nBeginning Iterations\n")
     it_num = 0
-    while(np.abs(E_new - E_old) > convergence):
+    while abs(E_new - E_old) > convergence:
         it_num += 1
         E_old = E_new
         # step 1
-        targetdetset = set() # clear set of target determinants
-        for idet in coreset: # for each determinant in the core set of determinants...
-            targetdetset |= set(gen_singles_doubles(idet, nao)) # ...generate all single and double excitations and add them to the target set
-        A = dict.fromkeys(targetdetset, 0.0) # initalize a dictionary for the perturbed amplitudes of each determinant
-        hamdict.update(populatehamdict(targetdetset, coreset, hamdict, h1e, eri)) # update the hamiltonian dictionary
-        for idet in coreset: # for each determinant in the core set...
-            for jdet in targetdetset: # ... and each in the target set...
-                nexc_ij = n_excit_sets(idet, jdet) # find the exitation level between the two determinants
-                if nexc_ij in (1, 2): # don't bother checking anything with a zero hamiltonian element (Slater Condon rules)
-                    A[jdet] += hamdict[frozenset([idet, jdet])] * C[idet] # evaluate perturbed amplitudes (see paper eq 4)
-        for idet in targetdetset: # for each determinant in the target set
-            A[idet] /= (hamdict[frozenset((idet))] - E_old) # evaluate the denominator of eq 4 of the paper
-        for idet in coreset: # for each determinant in the coreset...
-            if idet in A: # if the determinant has a perturbed amplitude (which means its a )
-                if abs(A[idet]) < abs(C[idet]): # replace with the biggest again
+        # clear set of target determinants
+        targetdetset = set()
+        # for each determinant in the core set of determinants...
+        for idet in coreset:
+            # ...generate all single and double excitations and add
+            # them to the target set
+            targetdetset |= set(gen_singles_doubles(idet, nao))
+        # initalize a dictionary for the perturbed amplitudes of each
+        # determinan
+        A = dict.fromkeys(targetdetset, 0.0)
+        # update the hamiltonian dictionary
+        hamdict.update(populatehamdict(targetdetset, coreset, hamdict, h1e, eri))
+        # for each determinant in the core set...
+        for idet in coreset:
+            # ... and each in the target set...
+            for jdet in targetdetset:
+                # find the exitation level between the two
+                # determinants
+                nexc_ij = n_excit_sets(idet, jdet)
+                # don't bother checking anything with a zero
+                # hamiltonian element (Slater Condon rules)
+                if nexc_ij in (1, 2):
+                    # evaluate perturbed amplitudes (see paper eq 4)
+                    A[jdet] += hamdict[frozenset([idet, jdet])] * C[idet]
+        # for each determinant in the target set
+        for idet in targetdetset:
+            # evaluate the denominator of eq 4 of the paper
+            A[idet] /= (hamdict[frozenset((idet))] - E_old)
+        # for each determinant in the coreset...
+        for idet in coreset:
+            # if the determinant has a perturbed amplitude (which
+            # means its a )
+            if idet in A:
+                # replace with the biggest again
+                if abs(A[idet]) < abs(C[idet]):
                     A[idet] = C[idet]
             else:
                 A[idet] = C[idet]
@@ -524,7 +568,7 @@ def asci(mol, cdets, tdets, convergence=1e-6, printroots=4, iter_min=0, visualiz
         A_dets = [i[0] for i in A_truncated]
         hamdict.update(populatehamdict(A_dets, A_dets, hamdict, h1e, eri))
         targetham = getsmallham(A_dets, hamdict)
-        eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham, k=2*printroots)
+        eig_vals, eig_vecs = sp.sparse.linalg.eigsh(targetham, k=2*printroots)
         eig_vals_sorted = np.sort(eig_vals)[:printroots]
         E_new = eig_vals_sorted[0]
         print("Iteration {:} Energy: ".format(it_num), E_new + E_nuc)
@@ -540,11 +584,11 @@ def asci(mol, cdets, tdets, convergence=1e-6, printroots=4, iter_min=0, visualiz
     #   for i,j in zip(eig_vals_sorted + E_nuc, efci):
     #       print(i,j)
     print("first {:} pyci eigvals".format(printroots))
-    for i in (eig_vals_sorted + E_nuc):
+    for i in eig_vals_sorted + E_nuc:
         print(i)
     print("size of hamdict:", len(hamdict))
-    if visualize:
-        visualize_sets(newdet, nao, Na, Nb, "ASCI")
+    # if visualize:
+    #     visualize_sets(newdet, nao, Na, Nb, "ASCI")
     print("Completed ASCI!")
 
     return
@@ -556,7 +600,7 @@ def asci(mol, cdets, tdets, convergence=1e-6, printroots=4, iter_min=0, visualiz
 def heatbath(det, norb, hamdict, amplitudes, epsilon, h1e, eri, preservedict=True):
     """Where is my docstring?"""
     if not preservedict:
-        __hamdict={}
+        __hamdict = dict()
     excitation_space = set()
     for i in det:
         excitation_space |= set(gen_singles(i, norb) + gen_doubles(i, norb))
@@ -576,7 +620,7 @@ def heatbath(det, norb, hamdict, amplitudes, epsilon, h1e, eri, preservedict=Tru
                     if abs(h * amplitudes[j]) >= epsilon:
                         add = True
                         hamdict[frozenset([i, j])] = h
-        if add == False:
+        if not add:
             remove_set.add(i)
     return excitation_space - remove_set, hamdict
 
@@ -585,7 +629,7 @@ def hbci(mol, epsilon=0.01, convergence=0.01, printroots=4, visualize=False, pre
     """Where is my docstring?"""
     print(preservedict)
     if not preservedict:
-        __hamdict={}
+        __hamdict = dict()
     print("PYCI")
     print("method: HBCI")
     print("Paper: https://arxiv.org/abs/1606.07453")
@@ -607,7 +651,7 @@ def hbci(mol, epsilon=0.01, convergence=0.01, printroots=4, visualize=False, pre
     E_old = 0.0
     E_new = E_hf
     hfdet = (frozenset(range(Na)), frozenset(range(Nb)))
-    oldselecteddetset= {hfdet}
+    oldselecteddetset = {hfdet}
     C = {hfdet : 1.0}
     print("Hartree-Fock Energy: ", E_hf)
     print("")
@@ -622,7 +666,7 @@ def hbci(mol, epsilon=0.01, convergence=0.01, printroots=4, visualize=False, pre
         newselecteddetset |= oldselecteddetset
         hamdict.update(populatehamdict(newselecteddetset, newselecteddetset, hamdict, h1e, eri))
         selectedham = getsmallham(list(newselecteddetset), hamdict)
-        eig_vals,eig_vecs = sp.sparse.linalg.eigsh(selectedham, k=2 * printroots)
+        eig_vals, eig_vecs = sp.sparse.linalg.eigsh(selectedham, k=2 * printroots)
         eig_vals_sorted = np.sort(eig_vals)[:printroots]
         E_new = eig_vals_sorted[0]
         amplitudes = eig_vecs[:, np.argsort(eig_vals)[0]]
@@ -642,10 +686,10 @@ def hbci(mol, epsilon=0.01, convergence=0.01, printroots=4, visualize=False, pre
         print("Selected Space size: ", len(oldselecteddetset))
         print("")
     print("first {:} pyci eigvals".format(printroots))
-    for i in (eig_vals_sorted + E_nuc):
+    for i in eig_vals_sorted + E_nuc:
         print(i)
-    if visualize:
-        visualize_sets(newdet, nao, Na, Nb, "HBCI")
+    # if visualize:
+    #     visualize_sets(newdet, nao, Na, Nb, "HBCI")
     print("Completed HBCI!")
 
     return
@@ -657,52 +701,73 @@ def hbci(mol, epsilon=0.01, convergence=0.01, printroots=4, visualize=False, pre
 def cisd(mol, printroots=4, visualize=False, preservedict=True):
     """Where is my docstring?"""
     if not preservedict:
-        __hamdict={}
+        __hamdict = dict()
     print("PYCI")
     print("method: CISD")
     print("Number of eigenvalues: ", printroots)
     print("")
-    Na,Nb = mol.nelec # get number of electrons
-    E_nuc = mol.energy_nuc() # get nuclear repulsion energy
-    nao = mol.nao_nr() # get number of spatial atomic orbitals which we assume is the same as the number of spatial molecular orbitals which is true when using RHF
-    myhf = scf.RHF(mol) # create RHF object for molecule
-    E_hf = myhf.kernel() # get Hartree-Fock energy
-    mo_coefficients = myhf.mo_coeff # get MO coefficients
-    h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients)) # create matrix of 1 electron integrals
+    Na, Nb = mol.nelec
+    E_nuc = mol.energy_nuc()
+    # get number of spatial atomic orbitals which we assume is the
+    # same as the number of spatial molecular orbitals which is true
+    # when using RHF, as long as there are no linear dependencies
+    nao = mol.nao_nr()
+    myhf = scf.RHF(mol)
+    E_hf = myhf.kernel()
+    mo_coefficients = myhf.mo_coeff
+    # create matrix of 1 electron integrals
+    h1e = reduce(np.dot, (mo_coefficients.T, myhf.get_hcore(), mo_coefficients))
     print("transforming eris")
-    eri = ao2mo.kernel(mol, mo_coefficients) # get 2 electron integrals
-    hamdict = dict() # create dictionary of hamiltonian elements
-    hfdet = (frozenset(range(Na)),frozenset(range(Nb))) # create Hartree-Fock determinant bit representation
-    targetdetset = set() # initalize set of target determinants
-    coreset = {hfdet} # initalize set of core determinants
+    # get 2 electron integrals
+    eri = ao2mo.kernel(mol, mo_coefficients)
+    # create dictionary of hamiltonian elements
+    hamdict = dict()
+    # create Hartree-Fock determinant bit representation
+    hfdet = (frozenset(range(Na)), frozenset(range(Nb)))
+     # initalize set of target determinants
+    targetdetset = set()
+    # initalize set of core determinants
+    coreset = {hfdet}
     print("\nHartree-Fock Energy: ", E_hf)
-    for idet in coreset: # for each determinant in the core set of determinants...
-        targetdetset |= set(gen_singles_doubles(idet,nao)) # ...generate all single and double excitations and add them to the target set
-    targetdetset |= coreset # create a set from the union of the target and core determinants
-    hamdict.update(populatehamdict(targetdetset,targetdetset,hamdict,h1e,eri)) # update the dictionary of hamiltonian elements with those of the target determinants
-    targetham = getsmallham(list(targetdetset),hamdict) # construct the hamiltonian in the target space
-    eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots) # diagonalize the hamiltonian yielding the eigenvalues and eigenvectors
+    # for each determinant in the core set of determinants...
+    for idet in coreset:
+        # ...generate all single and double excitations and add them
+        # to the target set
+        targetdetset |= set(gen_singles_doubles(idet, nao))
+    # create a set from the union of the target and core determinants
+    targetdetset |= coreset
+    # update the dictionary of hamiltonian elements with those of the
+    # target determinants
+    hamdict.update(populatehamdict(targetdetset, targetdetset, hamdict, h1e, eri))
+    # construct the hamiltonian in the target space
+    targetham = getsmallham(list(targetdetset), hamdict)
+    # diagonalize the hamiltonian yielding the eigenvalues and
+    # eigenvectors
+    eig_vals, eig_vecs = sp.sparse.linalg.eigsh(targetham, k=2 * printroots)
     eig_vals_sorted = np.sort(eig_vals)[:printroots] # sort the eigenvalues
     print("")
     print("first {:} pyci eigvals".format(printroots))
-    for i in (eig_vals_sorted + E_nuc):
+    for i in eig_vals_sorted + E_nuc:
         print(i)
     print(np.shape(eig_vecs))
-    if visualize:
-        newdet = [i for i in zip(list(targetdetset),eig_vecs[:,np.argsort(eig_vals)[0]])]
-        visualize_sets(newdet,nao,Na,Nb,"CISD")
+    # if visualize:
+    #     newdet = [i for i in zip(list(targetdetset),eig_vecs[:,np.argsort(eig_vals)[0]])]
+    #     visualize_sets(newdet,nao,Na,Nb,"CISD")
     print("Completed CISD!")
+
+    return
 
 ###########################################################FCI funcs
 
-def fci(mol,printroots=4,visualize=False,preservedict=True):
+def fci(mol, printroots=4, visualize=False, preservedict=True):
+    """Where is my docstring?"""
     if not preservedict:
-        __hamdict={}
+        __hamdict = dict()
     print("PYCI")
     print("method: FCI")
-    print("Number of eigenvalues: ",printroots)
+    print("Number of eigenvalues: ", printroots)
     print("")
-    Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
+    Na, Nb = mol.nelec
     E_nuc = mol.energy_nuc()
     nao = mol.nao_nr()
     myhf = scf.RHF(mol)
@@ -712,34 +777,37 @@ def fci(mol,printroots=4,visualize=False,preservedict=True):
     print("transforming eris")
     eri = ao2mo.kernel(mol, mo_coefficients)
     print("generating all determinants")
-    fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
-    ndets=len(fulldetlist_sets)
+    fulldetlist_sets = gen_dets_sets(nao, Na, Nb)
+    ndets = len(fulldetlist_sets)
     print("constructing full Hamiltonian")
-    full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
-    eig_vals,eig_vecs = sp.sparse.linalg.eigsh(full_hamiltonian,k=2*printroots)
+    full_hamiltonian = construct_hamiltonian(ndets, fulldetlist_sets, h1e, eri)
+    eig_vals, eig_vecs = sp.sparse.linalg.eigsh(full_hamiltonian, k=2 * printroots)
     eig_vals_sorted = np.sort(eig_vals)[:printroots]
     print("")
     print("first {:} pyci eigvals".format(printroots))
-    for i in (eig_vals_sorted + E_nuc):
+    for i in eig_vals_sorted + E_nuc:
         print(i)
-    if visualize:
-        print(len(fulldetlist_sets),len(eig_vecs[:,np.argsort(eig_vals)[0]]))
-        newdet = [i for i in zip(list(fulldetlist_sets),eig_vecs[:,np.argsort(eig_vals)[0]])]
-        visualize_sets(newdet,nao,Na,Nb,"FCI")
+    # if visualize:
+    #     print(len(fulldetlist_sets),len(eig_vecs[:,np.argsort(eig_vals)[0]]))
+    #     newdet = [i for i in zip(list(fulldetlist_sets),eig_vecs[:,np.argsort(eig_vals)[0]])]
+    #     visualize_sets(newdet,nao,Na,Nb,"FCI")
     print("Completed FCI!")
+
+    return eig_vals_sorted + E_nuc
 
 ########################################################### ACI
 
-def aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min=0,visualize=False):
+def aci(mol, sigma=100, gamma=0.0001, convergence=1e-10, printroots=4, iter_min=0, visualize=False):
+    """Where is my docstring?"""
     print("PYCI")
     print("method: ACI")
     print("Paper: http://dx.doi.org/10.1063/1.4948308")
     print("convergence: ", convergence)
-    print("Sigma: ",sigma)
-    print("Gamma: ",gamma)
-    print("Number of eigenvalues: ",printroots)
+    print("Sigma: ", sigma)
+    print("Gamma: ", gamma)
+    print("Number of eigenvalues: ", printroots)
     print("")
-    Na,Nb = mol.nelec #nelec is a tuple with (N_alpha, N_beta)
+    Na, Nb = mol.nelec
     E_nuc = mol.energy_nuc()
     nao = mol.nao_nr()
     myhf = scf.RHF(mol)
@@ -755,93 +823,97 @@ def aci(mol,sigma = 100,gamma = 0.0001,convergence = 1e-10,printroots=4,iter_min
     #use eri[idx2(i,j),idx2(k,l)] to get (ij|kl) chemists' notation 2e- ints
     #make full 4-index eris in MO basis (only for testing idx2)
     #print("generating all determinants")
-    #fulldetlist_sets=gen_dets_sets(nao,Na,Nb)
-    #ndets=len(fulldetlist_sets)
-    #full_hamiltonian = construct_hamiltonian(ndets,fulldetlist_sets,h1e,eri)
+    #fulldetlist_sets = gen_dets_sets(nao, Na, Nb)
+    #ndets = len(fulldetlist_sets)
+    #full_hamiltonian = construct_hamiltonian(ndets, fulldetlist_sets, h1e, eri)
     print("constructing full Hamiltonian")
-    #hamdict = construct_ham_dict(fulldetlist_sets,h1e,eri)
+    #hamdict = construct_ham_dict(fulldetlist_sets, h1e, eri)
     hamdict = dict()
 
     E_old = 0.0
     E_new = E_hf
-    hfdet = (frozenset(range(Na)),frozenset(range(Nb)))
+    hfdet = (frozenset(range(Na)), frozenset(range(Nb)))
     targetdetset = set()
     coreset = {hfdet}
-    C = {hfdet:1.0}
+    C = {hfdet : 1.0}
     print("\nHartree-Fock Energy: ", E_hf)
     print("\nBeginning Iterations\n")
     it_num = 0
-    while(np.abs(E_new - E_old) > convergence):
-        #print("is hfdet in coreset? ", hfdet in coreset)
+    while np.abs(E_new - E_old) > convergence:
+        # print("is hfdet in coreset? ", hfdet in coreset)
         it_num += 1
         E_old = E_new
-        #print("Core Dets: ",len(coreset))
-        #step 2
-        targetdetset=set()
+        # print("Core Dets: ",len(coreset))
+        # step 2
+        targetdetset = set()
         for idet in coreset:
-            targetdetset |= set(gen_singles_doubles(idet,nao))
+            targetdetset |= set(gen_singles_doubles(idet, nao))
         A = dict.fromkeys(targetdetset, 0.0)
-        hamdict.update(populatehamdict(targetdetset , coreset,hamdict,h1e,eri))
-        #equation 5
+        hamdict.update(populatehamdict(targetdetset, coreset, hamdict, h1e, eri))
+        # equation 5
         for jdet in targetdetset:
             V = 0
             for idet in coreset:
-                nexc_ij = n_excit_sets(idet,jdet)
-                if nexc_ij in (1,2): # don't bother checking anything with a zero hamiltonian element
+                nexc_ij = n_excit_sets(idet, jdet)
+                # don't bother checking anything with a zero
+                # hamiltonian element
+                if nexc_ij in (1, 2):
                     try:
-                        V += hamdict[frozenset([idet,jdet])] * C[idet]
+                        V += hamdict[frozenset([idet, jdet])] * C[idet]
                     except:
-                        V += hamdict[frozenset([jdet,idet])] * C[idet]
-            delta  = (hamdict[frozenset((jdet))] - E_new)/2.0
+                        V += hamdict[frozenset([jdet, idet])] * C[idet]
+            delta = (hamdict[frozenset((jdet))] - E_new) / 2.0
             A[jdet] = delta - np.sqrt((delta**2.0) + V**2.0)
-        #step 4
-        A_sorted = sorted(list(A.items()),key=lambda i: -abs(i[1]))
-        #cumulative energy error eq 6
+        # step 4
+        A_sorted = sorted(list(A.items()), key=lambda i: -abs(i[1]))
+        # cumulative energy error eq 6
         count = 0
         err = 0.0
-        while (abs(err)<=sigma and count < len(A_sorted)):
+        while (abs(err) <= sigma) and (count < len(A_sorted)):
             err += A_sorted[count][1]
-            count +=1
+            count += 1
         #step 5
         A_truncated = A_sorted[:count]
         A_dets = [i[0] for i in A_truncated]
         A_dets += list(coreset)
         A_dets = list(set(A_dets))
-        print("Q space size: ",len(A_dets))
-        hamdict.update(populatehamdict(A_dets,A_dets,hamdict,h1e,eri))
-        targetham = getsmallham(A_dets,hamdict)
-        eig_vals,eig_vecs = sp.sparse.linalg.eigsh(targetham,k=2*printroots)
+        print("Q space size: ", len(A_dets))
+        hamdict.update(populatehamdict(A_dets, A_dets, hamdict, h1e, eri))
+        targetham = getsmallham(A_dets, hamdict)
+        eig_vals, eig_vecs = sp.sparse.linalg.eigsh(targetham, k=2*printroots)
         eig_vals_sorted = np.sort(eig_vals)[:printroots]
         E_new = eig_vals_sorted[0]
         print("Iteration {:} Energy: ".format(it_num), E_new + E_nuc)
         #step 4
-        amplitudes = eig_vecs[:,np.argsort(eig_vals)[0]]
-        newdet = [i for i in zip(A_dets,amplitudes)]
+        amplitudes = eig_vecs[:, np.argsort(eig_vals)[0]]
+        newdet = [i for i in zip(A_dets, amplitudes)]
         C = {}
-        #eq 10
-        sorted_newdet = sorted(newdet,key=lambda j: -abs(j[1]))
+        # eq 10
+        sorted_newdet = sorted(newdet, key=lambda j: -abs(j[1]))
         err = 0
         count = 0
-        while abs(err) <= 1-(gamma*sigma):
+        while abs(err) <= 1 - (gamma * sigma):
             err += sorted_newdet[count][1]**2
             C[sorted_newdet[count][0]] = sorted_newdet[count][1]
-            count +=1
+            count += 1
         print(count)
-        if sorted(newdet,key=lambda j: -abs(j[1]))[0][0] != hfdet:
-            print("Biggest Contributor is NOT HF det ", sorted(newdet,key=lambda j: -abs(j[1]))[0])
+        if sorted(newdet, key=lambda j: -abs(j[1]))[0][0] != hfdet:
+            print("Biggest Contributor is NOT HF det ", sorted(newdet, key=lambda j: -abs(j[1]))[0])
         coreset = set(C.keys())
         print("")
     #import pickle
     #with open('ACI_DETS.txt', 'wb') as handle:
         #pickle.dump(newdet, handle)
-    if visualize:
-        visualize_sets(newdet,nao,Na,Nb,"ACI")
+    # if visualize:
+    #     visualize_sets(newdet,nao,Na,Nb,"ACI")
     print("first {:} pyci eigvals".format(printroots))
-    for i in (eig_vals_sorted + E_nuc):
+    for i in eig_vals_sorted + E_nuc:
         print(i)
     print("Completed ACI!")
+
+    return
 
 ########################################################### visualization
 
 if __name__ == "__main__":
-    print("\nPYCI utils file. This file was not meant to be run independently.")
+    print("PYCI utils file. This file was not meant to be run independently.")
