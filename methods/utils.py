@@ -591,7 +591,7 @@ def asci(mol, cdets=50, tdets=100, convergence=1e-6, printroots=4,
     #     visualize_sets(newdet, nao, Na, Nb, "ASCI")
     print("Completed ASCI!")
 
-    return
+    return eig_vals_sorted + E_nuc
 
 
 ############################################## HBCI functions
@@ -692,7 +692,7 @@ def hbci(mol, epsilon=0.01, convergence=0.01, printroots=4, visualize=False, pre
     #     visualize_sets(newdet, nao, Na, Nb, "HBCI")
     print("Completed HBCI!")
 
-    return
+    return eig_vals_sorted + E_nuc
 
 
 ########################################################### CISD funcs
@@ -755,7 +755,7 @@ def cisd(mol, printroots=4, visualize=False, preservedict=True):
     #     visualize_sets(newdet,nao,Na,Nb,"CISD")
     print("Completed CISD!")
 
-    return
+    return eig_vals_sorted + E_nuc
 
 ###########################################################FCI funcs
 
@@ -913,7 +913,7 @@ def aci(mol, sigma=100, gamma=0.0001, convergence=1e-10, printroots=4, iter_min=
         print(i)
     print("Completed ACI!")
 
-    return
+    return eig_vals_sorted + E_nuc
 
 ########################################################### visualization
 

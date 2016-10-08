@@ -4,6 +4,9 @@
 *.svg
 .DS_Store
 
+# py.test
+.cache/
+
 # quantum packages
 *.gbw
 *.prop
